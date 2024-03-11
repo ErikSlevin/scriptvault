@@ -1,36 +1,35 @@
 Attribute VB_Name = "Modul1"
 ' Datei: ZahlInWorten.vba
-' Autor: [Autorname]
-' Datum: [Aktuelles Datum]
-' Lizenz: [Lizenzinformation]
+' Autor: ErikSlevin
+' Datum: 15.03.2024
 
-' Globale Variablen für Zahlworte und Hilfsworte in Deutsch
+' Globale Variablen fï¿½r Zahlworte und Hilfsworte in Deutsch
 Private Zahlworte(0 To 28) As String
 Private Hilfsworte(1 To 4) As String
 
-' Diese Funktion wandelt eine Zahl in Worten um und gibt das Ergebnis zurück.
+' Diese Funktion wandelt eine Zahl in Worten um und gibt das Ergebnis zurï¿½ck.
 Function InWorten(ByVal Zahl As String) As String
-    ' Aufruf der Funktion zur Umwandlung von Zahlen in Wörter mit deutscher Sprache
+    ' Aufruf der Funktion zur Umwandlung von Zahlen in Wï¿½rter mit deutscher Sprache
     InWorten = ZahlInWorten(Zahl)
 End Function
 
-' Diese Funktion wandelt eine Zahl in Worten um und gibt das Ergebnis zurück.
+' Diese Funktion wandelt eine Zahl in Worten um und gibt das Ergebnis zurï¿½ck.
 Function ZahlInWorten(ByVal Zahl As String) As String
 
 Dim Euro As String, Cent As String
 Dim Ergebnis As String, Temp As String
-Dim Dezimalstelle As Integer, Zähler As Integer
+Dim Dezimalstelle As Integer, Zï¿½hler As Integer
 Dim Stelle(1 To 6) As String
 Dim dZahl As Double
-Dim Präfix As String, Suffix As String
+Dim Prï¿½fix As String, Suffix As String
 
-' Definition der Platzhalter für die Zahlenskalen
+' Definition der Platzhalter fï¿½r die Zahlenskalen
 Stelle(1) = ""
 Stelle(2) = " Tausend "
 Stelle(3) = " Millionen "
 Stelle(4) = " Milliarden "
 Stelle(5) = " Billionen "
-Stelle(6) = " Die Mantisse ist nicht groß genug für diese Zahl "
+Stelle(6) = " Die Mantisse ist nicht groï¿½ genug fï¿½r diese Zahl "
 Hilfsworte(1) = ">>>>> Fehler (Absolutbetrag > 999999999999999)! <<<<<"
 Hilfsworte(2) = " (gerundet)"
 Hilfsworte(3) = "Minus "
@@ -40,25 +39,25 @@ Zahlworte(1) = "ein"
 Zahlworte(2) = "zwei"
 Zahlworte(3) = "drei"
 Zahlworte(4) = "vier"
-Zahlworte(5) = "fünf"
+Zahlworte(5) = "fï¿½nf"
 Zahlworte(6) = "sechs"
 Zahlworte(7) = "sieben"
 Zahlworte(8) = "acht"
 Zahlworte(9) = "neun"
 Zahlworte(10) = "zehn"
 Zahlworte(11) = "elf"
-Zahlworte(12) = "zwölf"
+Zahlworte(12) = "zwï¿½lf"
 Zahlworte(13) = "dreizehn"
 Zahlworte(14) = "vierzehn"
-Zahlworte(15) = "fünfzehn"
+Zahlworte(15) = "fï¿½nfzehn"
 Zahlworte(16) = "sechzehn"
 Zahlworte(17) = "siebzehn"
 Zahlworte(18) = "achtzehn"
 Zahlworte(19) = "neunzehn"
 Zahlworte(20) = "zwanzig"
-Zahlworte(21) = "dreißig"
+Zahlworte(21) = "dreiï¿½ig"
 Zahlworte(22) = "vierzig"
-Zahlworte(23) = "fünfzig"
+Zahlworte(23) = "fï¿½nfzig"
 Zahlworte(24) = "sechzig"
 Zahlworte(25) = "siebzig"
 Zahlworte(26) = "achtzig"
@@ -73,7 +72,7 @@ End If
 ' Die Eingabe wird als Zahl interpretiert
 dZahl = Zahl + 0#
       
-' Überprüfen, ob die Zahl innerhalb des unterstützten Bereichs liegt
+' ï¿½berprï¿½fen, ob die Zahl innerhalb des unterstï¿½tzten Bereichs liegt
 If Abs(dZahl) > 999999999999999# Then
     ZahlInWorten = Hilfsworte(1)
     Exit Function
@@ -87,7 +86,7 @@ End If
 
 ' Vorzeichen der Zahl bestimmen
 If dZahl < 0# Then
-    Präfix = Hilfsworte(3)
+    Prï¿½fix = Hilfsworte(3)
     dZahl = -dZahl
     Zahl = Right(Zahl, Len(Zahl) - 1)
 End If
@@ -107,15 +106,15 @@ If Dezimalstelle > 0 Then
     Zahl = Trim(Left(Zahl, Dezimalstelle - 1))
 End If
 
-Zähler = 1
+Zï¿½hler = 1
 Do While Zahl <> ""
     Temp = GetHundreds(Right(Zahl, 3))
     If Temp <> "" Then
         If Euro <> "" Then
-            Euro = Temp & Stelle(Zähler) & " " & _
+            Euro = Temp & Stelle(Zï¿½hler) & " " & _
                    Hilfsworte(4) & " " & Euro
         Else
-            Euro = Temp & Stelle(Zähler) & Euro
+            Euro = Temp & Stelle(Zï¿½hler) & Euro
         End If
     End If
     If Len(Zahl) > 3 Then
@@ -123,10 +122,10 @@ Do While Zahl <> ""
     Else
         Zahl = ""
     End If
-    Zähler = Zähler + 1
+    Zï¿½hler = Zï¿½hler + 1
 Loop
   
-' Währungsformatierung für Euro
+' Wï¿½hrungsformatierung fï¿½r Euro
 Select Case Euro
     Case ""
         Euro = Zahlworte(0) & " Euro"
@@ -146,7 +145,7 @@ Select Case Cent
         Cent = " " & Hilfsworte(4) & " " & Cent & " Cent"
 End Select
 
-' Ergebnis zusammenführen und formatieren
+' Ergebnis zusammenfï¿½hren und formatieren
 Temp = UCase(Replace(Euro & Cent, "  ", " "))
 Temp = Application.WorksheetFunction.Proper(Temp)
 
@@ -155,12 +154,12 @@ Temp = Replace(Temp, " Ein ", " ein ")
 Temp = Replace(Temp, " Cents", " Cent")
 Temp = Replace(Temp, " Und ", " und ")
     
-' Gesamtergebnis zurückgeben
-ZahlInWorten = Präfix & Temp & Suffix
+' Gesamtergebnis zurï¿½ckgeben
+ZahlInWorten = Prï¿½fix & Temp & Suffix
 
 End Function
 
-' Diese Funktion wandelt eine dreistellige Zahl in Worten um und gibt das Ergebnis zurück.
+' Diese Funktion wandelt eine dreistellige Zahl in Worten um und gibt das Ergebnis zurï¿½ck.
 Private Function GetHundreds(ByVal Zahl) As String
 Dim Ergebnis As String
 
@@ -184,7 +183,7 @@ If Val(Zahl) = 0 Then Exit Function
     GetHundreds = Ergebnis
 End Function
 
-' Diese Funktion wandelt eine zweistellige Zahl in Worten um und gibt das Ergebnis zurück.
+' Diese Funktion wandelt eine zweistellige Zahl in Worten um und gibt das Ergebnis zurï¿½ck.
 Private Function GetTens(ByVal Zehner As String) As String
 Dim Ergebnis As String
 
@@ -209,7 +208,7 @@ End If
 GetTens = Ergebnis
 End Function
 
-' Diese Funktion wandelt eine einzelne Ziffer in Worten um und gibt das Ergebnis zurück.
+' Diese Funktion wandelt eine einzelne Ziffer in Worten um und gibt das Ergebnis zurï¿½ck.
 Private Function ZifferInWort(ByVal Ziffer As String) As String
     If Val(Ziffer) < 10 Then
         ZifferInWort = Zahlworte(Val(Ziffer))
