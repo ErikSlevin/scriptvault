@@ -23,7 +23,7 @@ Quellen:
 - [Herber Forum - Zahlen in Worte Excel VBA](https://www.herber.de/forum/archiv/1744to1748/1744401_Zahlen_in_Worte_Excel_VBA.html)
 
 
-# Excel-Makros für Datum und Autor des letzten Speicherns [last_change_and_author.bas](last_change_and_author.bas)
+# Datum und Autor des letzten Speicherns [last_change_and_author.bas](last_change_and_author.bas)
 
 Dieses Excel-VBA-Modul enthält zwei Funktionen, die das Datum und die Uhrzeit des letzten Speicherns sowie den Namen des letzten Autors zurückgeben. Außerdem gibt es einen Workbook-Event-Handler, der sicherstellt, dass die Funktionen aktualisiert werden, wenn das Arbeitsblatt gespeichert wird.
 
