@@ -30,7 +30,7 @@ function VerbindeMitRDP {
         [Parameter(Mandatory=$true)]
         [string]$rdpDatei,                 # Der Pfad zur RDP-Datei
         [string]$ziel,                     # Die IP-Adresse oder der Hostname des Zielcomputers
-        [int]$Verzoegerung = 5             # Die Verzögerung vor der RDP-Verbindung (Standard: 5 Sekunden)
+        [int]$Verzoegerung = 60            # Die Verzögerung vor der RDP-Verbindung (Standard: 60 Sekunden)
     )
 
     # Timer starten
