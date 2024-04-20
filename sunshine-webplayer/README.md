@@ -2,6 +2,8 @@
 
 Dieses PowerShell-Skript durchsucht die Webseite von Sunshine Live, extrahiert die Titel und Links der verfügbaren Streams,sortiert sie alphabetisch und erstellt dann eine HTML-Datei mit einem Audioplayer und Buttons zum Abspielen der Streams. Alle Streams kommen direkt von Sunshine Live.
 
+![screenshot.png](screenshot.png)
+
 ## Funktionen
 
 - Lädt automatisch die Webseite von Sunshine Live herunter
