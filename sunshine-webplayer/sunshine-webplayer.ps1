@@ -26,6 +26,10 @@ $matches = [regex]::Matches($htmlContent, $regex)
 
 # Extrahierte Titel und Links speichern
 $streamData = @()
+$streamData += [PSCustomObject]@{
+    Title = "Live On Air"
+    Link = "http://stream.sunshine-live.de/live/mp3-192"
+}
 
 # Durch alle Übereinstimmungen iterieren und Titel und ersten Link pro <div class="wrapper"> extrahieren
 foreach ($match in $matches) {
@@ -91,11 +95,19 @@ $html = @"
 "@
 
 # Buttons für jeden Stream hinzufügen
+$html += @"
+<!-- Button zum Abspielen des Streams -->
+<button type="button" class="btn btn-outline-danger btn-sm mb-1" onclick="playStream('http://stream.sunshine-live.de/live/mp3-192', this, 'Live On Air')">Live On Air</button>
+"@
+
 foreach ($stream in $streamData) {
-    $html += @"
+    # Überprüfen, ob der aktuelle Stream nicht "Live On Air" ist, um ihn hinzuzufügen
+    if ($stream.Title -ne "Live On Air") {
+        $html += @"
            <!-- Button zum Abspielen des Streams -->
            <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('$($stream.Link)', this, '$($stream.Title)')">$($stream.Title)</button>
 "@
+    }
 }
 
 # Restliche HTML-Struktur hinzufügen
@@ -138,11 +150,12 @@ $html += @"
 
   // Live-Kanal automatisch abspielen und Button als aktiv markieren beim Laden der Seite
   window.onload = function() {
-    var liveButton = document.querySelector('.btn');
-    playStream('$audioSource', liveButton, '$($firstStream.Title)');
+    var liveButton = document.querySelector('.btn-danger'); // Der Live On Air Button
+    var liveButtonTitle = liveButton.textContent.trim(); // Titel des Live On Air Buttons
+    var liveButtonUrl = liveButton.getAttribute('onclick').match(/'(.*?)'/)[1]; // URL des Live On Air Streams
+    playStream(liveButtonUrl, liveButton, liveButtonTitle);
   };
 </script>
-<!-- Bootstrap Sticky Footer -->
 
 </body>
 </html>
