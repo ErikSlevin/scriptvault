@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sunshine Live Streams</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+
+    .music-player {
+        text-align: center;
+        margin: 20px auto;
+    }
+
+    footer {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: red;
+        color: white;
+        text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container mt-5">
+  <h1 class="text-center mb-4">Sunshine Live Streams</h1>
+  <!-- Titel des aktuell abgespielten Streams -->
+  <h2 id="streamTitle" class="text-center mb-4">[TITLE]</h2>
+  <div class="row">
+    <div class="col-md-12 text-center">
+      <!-- Audioplayer -->
+      <audio controls autoplay id="audioPlayer" class="w-20" controlsList="nodownload noplaybackrate" src="https://stream.sunshine-live.de/2000er/mp3-192/stream.sunshine-live.de/"></audio>
+    </div>
+    <div class="col-md-12 mt-3 text-center"><!-- Button zum Abspielen des Streams -->
+<button type="button" class="btn btn-outline-danger btn-sm mb-1" onclick="playStream('http://stream.sunshine-live.de/live/mp3-192', this, 'Live On Air')">Live On Air</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/2000er/mp3-192/stream.sunshine-live.de/', this, '2000er')">2000er</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/2010er/mp3-192/stream.sunshine-live.de/', this, '2010er')">2010er</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/80er/mp3-192/stream.sunshine-live.de/', this, '80er')">80er</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/90er/mp3-192/stream.sunshine-live.de/', this, '90er')">90er</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/sp5/mp3-192/stream.sunshine-live.de/', this, '90s Anthems')">90s Anthems</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/sp7/mp3-192/stream.sunshine-live.de/', this, 'Afterhour')">Afterhour</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/twenty/mp3-192/stream.sunshine-live.de/', this, 'Best of 20 years')">Best of 20 years</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/Blue/mp3-192/stream.sunshine-live.de/', this, 'Blue')">Blue</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/amsterdam/mp3-192/stream.sunshine-live.de/', this, 'Bunker')">Bunker</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/sp6/mp3-192/stream.sunshine-live.de/', this, 'Charts')">Charts</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/sp8/mp3-192/stream.sunshine-live.de/', this, 'Chillout')">Chillout</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/vocalhouse/mp3-192/stream.sunshine-live.de/', this, 'Classic & Vocal House')">Classic & Vocal House</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/classics/mp3-192/stream.sunshine-live.de/', this, 'Classics')">Classics</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/club/mp3-192/stream.sunshine-live.de/', this, 'Club')">Club</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/playlist1/mp3-192/stream.sunshine-live.de/', this, 'Clubsound Berlin')">Clubsound Berlin</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/dnb/mp3-192/stream.sunshine-live.de/', this, 'Drum & Bass')">Drum & Bass</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/edm/mp3-192/stream.sunshine-live.de/', this, 'EDM')">EDM</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/eurodance/mp3-192/stream.sunshine-live.de/', this, 'Eurodance')">Eurodance</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/technoqueens/mp3-192/stream.sunshine-live.de/', this, 'Female Power ')">Female Power </button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/festival/mp3-192/stream.sunshine-live.de/', this, 'Festival')">Festival</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/focus/mp3-192/stream.sunshine-live.de/', this, 'Focus')">Focus</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/futurebass/mp3-192/stream.sunshine-live.de/', this, 'Future Bass')">Future Bass</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/gamescom/mp3-192/stream.sunshine-live.de/', this, 'Gamescom FM')">Gamescom FM</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/gaming/mp3-192/stream.sunshine-live.de/', this, 'Gaming')">Gaming</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/Hardcore/mp3-192/stream.sunshine-live.de/', this, 'Hardcore')">Hardcore</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/hardstyle/mp3-192/stream.sunshine-live.de/', this, 'Hardstyle')">Hardstyle</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/Hardtechno/mp3-192/stream.sunshine-live.de/', this, 'Hardtechno')">Hardtechno</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/avicii/mp3-192/stream.sunshine-live.de/', this, 'Heartbreak')">Heartbreak</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/house/mp3-192/stream.sunshine-live.de/', this, 'House')">House</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/iamraving/mp3-192/stream.sunshine-live.de/', this, 'I AM RAVING')">I AM RAVING</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/ibiza/mp3-192/stream.sunshine-live.de/', this, 'Ibiza')">Ibiza</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/lounge/mp3-192/stream.sunshine-live.de/', this, 'Lounge')">Lounge</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/love/mp3-192/stream.sunshine-live.de/', this, 'Love')">Love</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/MelodicB/mp3-192/stream.sunshine-live.de/', this, 'Melodic Beats')">Melodic Beats</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/melodic-techno/mp3-192/stream.sunshine-live.de/', this, 'Melodic Techno')">Melodic Techno</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/mixmission/mp3-192/stream.sunshine-live.de/', this, 'Mix Mission')">Mix Mission</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/newhits/mp3-192/stream.sunshine-live.de/', this, 'New Hits')">New Hits</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/party/mp3-192/stream.sunshine-live.de/', this, 'Party')">Party</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/winterchill/mp3-192/stream.sunshine-live.de/', this, 'Peaceful Beats')">Peaceful Beats</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/pop/mp3-192/stream.sunshine-live.de/', this, 'Pop')">Pop</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/xmas/mp3-192/stream.sunshine-live.de/', this, 'Psytrance')">Psytrance</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/raveonsnow/mp3-192/stream.sunshine-live.de/', this, 'Rave On Snow 2018')">Rave On Snow 2018</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/relax/mp3-192/stream.sunshine-live.de/', this, 'Relax')">Relax</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/remix/mp3-192/stream.sunshine-live.de/', this, 'Remix')">Remix</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/depechemode/mp3-192/stream.sunshine-live.de/', this, 'Sad')">Sad</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/schweiz/mp3-128/stream.sunshine-live.de/', this, 'Schweiz')">Schweiz</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/live/mp3-192/stream.sunshine-live.de/', this, 'Simulcast')">Simulcast</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/premium/mp3-192/stream.sunshine-live.de/', this, 'Simulcast Premium')">Simulcast Premium</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/sp2/mp3-192/stream.sunshine-live.de/', this, 'Summer Beats')">Summer Beats</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/pride/mp3-192/stream.sunshine-live.de/', this, 'sunshine live and pride')">sunshine live and pride</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/sp4/mp3-192/stream.sunshine-live.de/', this, 'Tech House')">Tech House</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/techno/mp3-192/stream.sunshine-live.de/', this, 'Techno')">Techno</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/trance/mp3-192/stream.sunshine-live.de/', this, 'Trance')">Trance</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/tropicalhouse/mp3-192/stream.sunshine-live.de/', this, 'Tropical House')">Tropical House</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/usa/mp3-192/stream.sunshine-live.de/', this, 'USA')">USA</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/vocaltrance/mp3-192/stream.sunshine-live.de/', this, 'Vocal Trance')">Vocal Trance</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/warmup/mp3-192/stream.sunshine-live.de/', this, 'Warm up')">Warm up</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/prodigy/mp3-192/stream.sunshine-live.de/', this, 'Winter Chill')">Winter Chill</button>           <!-- Button zum Abspielen des Streams -->
+           <button type="button" class="btn btn-outline-primary btn-sm mb-1" onclick="playStream('https://stream.sunshine-live.de/workout/mp3-192/stream.sunshine-live.de/', this, 'Workout')">Workout</button>   </div>
+  </div>
+</div>
+
+<footer class="footer mt-auto py-3 bg-light">
+  <div class="container">
+    <!-- Footer-Text -->
+    <span class="text-muted" style="font-size: 12px;">Made with <span style="color: #e25555;">❤</span> by ErikSlevin - Playlists bereitgestellt von Sunshine Live: <a href="https://www.sunshine-live.de/">www.sunshine-live.de</a></span>
+  </div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
+
+<!-- JavaScript zum Steuern des Audioplayers und der Stream-Auswahl -->
+<script>
+  function playStream(url, button, title) {
+    var audioPlayer = document.getElementById('audioPlayer');
+    audioPlayer.src = url;
+
+    // Alle Buttons zurücksetzen
+    var allButtons = document.querySelectorAll('.btn');
+    allButtons.forEach(function(btn) {
+      btn.classList.remove('btn-primary', 'active');
+      btn.classList.add('btn-outline-primary');
+    });
+
+    // Angeklickten Button als aktiv markieren
+    button.classList.remove('btn-outline-primary');
+    button.classList.add('btn-primary', 'active');
+
+    // Stream-Titel aktualisieren
+    document.getElementById('streamTitle').textContent = title;
+  }
+
+  // Live-Kanal automatisch abspielen und Button als aktiv markieren beim Laden der Seite
+  window.onload = function() {
+    var liveButton = document.querySelector('.btn-danger'); // Der Live On Air Button
+    var liveButtonTitle = liveButton.textContent.trim(); // Titel des Live On Air Buttons
+    var liveButtonUrl = liveButton.getAttribute('onclick').match(/'(.*?)'/)[1]; // URL des Live On Air Streams
+    playStream(liveButtonUrl, liveButton, liveButtonTitle);
+  };
+</script>
+
+</body>
+</html>
