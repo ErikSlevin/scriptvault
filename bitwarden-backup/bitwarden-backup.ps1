@@ -6,6 +6,7 @@ $backupFolder  = 'C:\Users\............'
 $user          = @("user-1","user-2")
 $extension     = "json"
 
+
 # Serverkonfiguration
 if ($server) {
     Write-Host "`nVerwende selbstgehosteten Bitwarden-Tresor ($server)"
@@ -20,7 +21,7 @@ foreach ($u in $user) {
     Write-Host "Sichere Bitwarden-Daten für Benutzer: $u"
 
     # Masterpasswort abfragen und anmelden
-    $masterPass = Read-Host -Prompt "Bitte geben Sie Ihr Masterpasswort für $u ein" -AsSecureString -Encoding UTF8
+    $masterPass = Read-Host -Prompt "Bitte geben Sie Ihr Masterpasswort für $u ein" -AsSecureString 
     $masterPass = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($masterPass))
 
     $loggedIn = $false
