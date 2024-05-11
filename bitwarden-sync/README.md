@@ -49,3 +49,35 @@ Dieses Bash-Skript automatisiert die Sicherung der Bitwarden-Datenbank und das V
     - Öffne die Crontab-Konfigurationsdatei mit dem Befehl `sudo crontab -e`.
     - **Jeden Tag um 01:35 Uhr nachts:** `35 1 * * * sudo bash /Pfad/zum/Skript/bw-backup-script-server-2.sh`
     - Siehe unten für Beispiel-Cron-Jobs.
+
+
+## Logger
+
+- Logger anpassen: ```/etc/systemd/journald.conf```
+```yaml
+[Journal]
+SplitMode=syslog
+SyslogIdentifier=bitwarden_backup
+SystemMaxUse=50M
+SystemKeepFree=100M
+RuntimeMaxUse=50M
+RuntimeKeepFree=100M
+Storage=persistent
+```
+- journald neustarten: ```sudo systemctl restart systemd-journald```
+- journald auslesen: ```journalctl -t bitwarden_backup```
+
+Beispielausgabe:
+```
+Mai 11 23:57:14 pi-docker-1 bitwarden_backup[690373]: info: Bitwarden Backup Skript Start
+Mai 11 23:57:14 pi-docker-1 bitwarden_backup[690385]: info: Dockercontainer wurde erfolgreich gestoppt.
+Mai 11 23:57:14 pi-docker-1 bitwarden_backup[690399]: info: Daten wurden erfolgreich gesichert.
+Mai 11 23:57:14 pi-docker-1 bitwarden_backup[690407]: info: Backup verschoben: Datei: 240511-pi-docker-1-bitwarden-backup.tar.gz
+Mai 11 23:57:15 pi-docker-1 bitwarden_backup[690447]: info: Bitwarden Container auf Remote-Server wurde erfolgreich gestoppt.
+Mai 11 23:57:15 pi-docker-1 bitwarden_backup[690453]: info: Bitwarden Backup Skript Ende
+Mai 12 00:01:15 pi-docker-1 bitwarden_backup[693155]: info: Bitwarden Backup Skript Start
+Mai 12 00:01:15 pi-docker-1 bitwarden_backup[693168]: info: Dockercontainer wurde erfolgreich gestoppt.
+Mai 12 00:01:15 pi-docker-1 bitwarden_backup[693179]: info: Daten wurden erfolgreich gesichert.
+Mai 12 00:01:16 pi-docker-1 bitwarden_backup[693187]: info: Backup verschoben: Datei: 240512-pi-docker-1-bitwarden-backup.tar.gz
+Mai 12 00:01:16 pi-docker-1 bitwarden_backup[693193]: info: Bitwarden Backup Skript Ende
+```
