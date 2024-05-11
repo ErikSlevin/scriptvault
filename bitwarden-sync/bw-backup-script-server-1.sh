@@ -81,5 +81,9 @@ if [ "$backup_count" -gt 10 ]; then
     ls -1t "$backup_dir" | grep ".*-pi-docker-1-bitwarden-backup.tar.gz" | tail -n +11 | xargs -I {} rm "$backup_dir/{}"
 fi
 
+# Starte den Bitwarden Docker-Container
+docker container start bitwarden > /dev/null 2>&1 || exit_on_error "Fehler: Dockercontainer konnte nicht gestartet werden."
+log "info" "Dockercontainer wurde erfolgreich gestartet"
+
 # Protokolliere das Ende des Skripts
 log "info" "Bitwarden Backup Skript Ende"
