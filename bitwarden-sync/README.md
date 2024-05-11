@@ -47,5 +47,5 @@ Dieses Bash-Skript automatisiert die Sicherung der Bitwarden-Datenbank und das V
 4. **Automatisierung mit Cron-Jobs:**
     - Um das Skript regelmäßig auszuführen, kannst du es in einem Cron-Job einplanen.
     - Öffne die Crontab-Konfigurationsdatei mit dem Befehl `sudo crontab -e`.
-    - **Jeden Tag um 01:30 Uhr nachts:** `35 1 * * * sudo bash /Pfad/zum/Skript/bw-backup-script-server-2.sh`
+    - **Jeden Tag um 01:35 Uhr nachts:** `35 1 * * * sudo bash /Pfad/zum/Skript/bw-backup-script-server-2.sh`
     - Siehe unten für Beispiel-Cron-Jobs.
