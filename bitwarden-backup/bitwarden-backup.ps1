@@ -5,7 +5,57 @@ $server        = "bitwarden.selfhosted.de"
 $backupFolder  = 'C:\Users\............'
 $user          = @("user-1","user-2")
 $extension     = "json"
+function Set-Password {
+    [CmdletBinding()]
+    param(
+        [Parameter()]
+        [int]$MinimumLength = 8,                  # Minimale Länge des Passworts
+        [Parameter()]
+        [int]$MinimumUpperCase = 1,               # Minimale Anzahl an Großbuchstaben
+        [Parameter()]
+        [int]$MinimumLowerCase = 1,               # Minimale Anzahl an Kleinbuchstaben
+        [Parameter()]
+        [int]$MinimumDigit = 1                    # Minimale Anzahl an Ziffern
+    )
 
+    # Passwort abfragen und in SecureString umwandeln
+    do {
+        $securePassword = Read-Host "Geben Sie ein sicheres Passwort ein" -AsSecureString
+        $password = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword))
+
+        if ($password.Length -lt $MinimumLength) {  # Wenn das Passwort zu kurz ist, Fehlermeldung ausgeben und Schleife erneut durchlaufen
+            Write-Error "Das Passwort muss mindestens $MinimumLength Zeichen lang sein."
+            continue
+        }
+
+        # Wenn das Passwort mindestens eine Großbuchstabe, eine Kleinbuchstabe und eine Ziffer enthält
+        if (($password -cmatch "[A-Z]") -and ($password -cmatch "[a-z]") -and ($password -cmatch "[0-9]")) {
+
+            # Anzahl der Großbuchstaben, Kleinbuchstaben und Ziffern im Passwort zählen
+            $countUpperCase = ($password -replace "[^A-Z]").Length
+            $countLowerCase = ($password -replace "[^a-z]").Length
+            $countDigit = ($password -replace "[^\d]").Length
+
+            # Wenn das Passwort die Mindestanforderungen erfüllt
+            if (($countUpperCase -ge $MinimumUpperCase) -and ($countLowerCase -ge $MinimumLowerCase) -and ($countDigit -ge $MinimumDigit)) {
+                $securePasswordConfirm = Read-Host "Geben Sie das Passwort zur Bestätigung ein" -AsSecureString
+                $passwordConfirm = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePasswordConfirm))
+
+                # Wenn das bestätigte Passwort nicht mit dem eingegebenen Passwort übereinstimmt, Fehlermeldung ausgeben und Schleife erneut durchlaufen
+                if ($password -ne $passwordConfirm) {
+                    Write-Error "Die Passwörter stimmen nicht überein."
+                    continue
+                }
+
+                # Wenn alle Anforderungen erfüllt sind, das Passwort zurückgeben
+                return $securePassword
+            }
+        }
+
+        # Wenn das Passwort nicht die Mindestanforderungen erfüllt, Fehlermeldung ausgeben und Schleife erneut durchlaufen
+        Write-Error "Das Passwort erfüllt nicht die Anforderungen an Komplexität. Es muss mindestens $MinimumUpperCase Großbuchstaben, $MinimumLowerCase Kleinbuchstaben und $MinimumDigit Ziffern enthalten."
+    } while ($true)
+}
 
 # Serverkonfiguration
 if ($server) {
@@ -81,6 +131,16 @@ foreach ($u in $user) {
     Write-Host "`nMelde vom Tresor ab..."
     bw logout | Out-Null
     Write-Host "Sie wurden erfolgreich vom Tresor abgemeldet." -ForegroundColor Green
+    Write-Host "`nGeben Sie das Passwort zum verschlüsseln der Backup-Datei ein." -ForegroundColor Green
+    # Install-Module -Name 7zip4PowerShell -Verbose
+    $SecureString = Set-Password
+    Compress-7zip -Path $backupDateFolder `
+            -OutputPath "$backupDateFolder.7z" `
+            -ArchiveFileName "2024-04-27.7z" `
+            -CompressionLevel "Ultra" `
+            -CompressionMethod "Lzma2" `
+            -EncryptFilenames `
+            -SecurePassword $SecureString
 }
 
 Pause
