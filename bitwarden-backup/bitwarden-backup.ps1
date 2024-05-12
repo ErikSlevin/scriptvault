@@ -141,6 +141,9 @@ foreach ($u in $user) {
             -CompressionMethod "Lzma2" `
             -EncryptFilenames `
             -SecurePassword $SecureString
+
+    # Verzeichnis löschen
+    Remove-Item -Path $backupDateFolder -Recurse -Force
 }
 
 Pause
