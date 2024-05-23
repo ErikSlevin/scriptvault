@@ -16,6 +16,18 @@ function log() {
     echo -e "$level: $message" | logger -t bitwarden_backup -p user.$(echo $level | tr '[:lower:]' '[:upper:]')
 }
 
+function log_to_bitwarden() {
+    local level=$1
+    local message=$2
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S.%3N')
+    
+    # Festlegen des Logformats
+    local log_message="[${timestamp}][backup-script][${level}] ${message}"
+    
+    # Senden der Logmeldung an den Bitwarden-Container
+    docker exec bitwarden sh -c "echo '${log_message}' >> /proc/1/fd/1"
+}
+
 # Funktion zum Beenden des Skripts bei einem Fehler
 # Argumente:
 #   $1: Die Fehlermeldung
@@ -39,6 +51,7 @@ log "info" "Bitwarden Restore Skript Start"
 # Stoppe den Bitwarden Docker-Container
 docker container stop bitwarden > /dev/null 2>&1 || exit_on_error "Fehler: Dockercontainer konnte nicht gestoppt werden."
 log "info" "Dockercontainer wurde erfolgreich gestoppt."
+log_to_bitwarden "info" "Dockercontainer wurde durch das Backupscript gestoppt."
 
 # Lösche alle Daten im Bitwarden-Datenverzeichnis
 rm -rf /var/lib/docker/volumes/bitwarden/_data/* || exit_on_error "Fehler: Daten im Bitwarden-Datenverzeichnis konnten nicht gelöscht werden."
@@ -53,6 +66,7 @@ log "info" "Neuestes Backup wurde erfolgreich in das Bitwarden-Datenverzeichnis 
 # Starte den Bitwarden Docker-Container
 docker container start bitwarden > /dev/null 2>&1 || exit_on_error "Fehler: Dockercontainer konnte nicht gestartet werden."
 log "info" "Dockercontainer wurde erfolgreich gestartet."
+log_to_bitwarden "info" "Dockercontainer wurde durch das Backupscript gestartet."
 
 # Lösche ältere Backups, falls mehr als 10 vorhanden sind
 backup_count=$(ls -1 "$backup_dir" | wc -l)
