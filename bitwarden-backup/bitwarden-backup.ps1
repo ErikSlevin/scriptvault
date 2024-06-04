@@ -2,10 +2,10 @@
 #  Install-Module -Name 7Zip4Powershell  #
 ##########################################
 
-$server = "bitwarden.selfhosted.de"
-$backupFolder = 'C:\Users\erik\OneDrive\06 - Backups\Bitwarden'
-$user = @("user-1@ihd.de","user-2@hrje.com")
-$extension = "json"
+$server        = "bitwarden.selfhosted.de"
+$backupFolder  = 'C:\Users\erik\OneDrive\06 - Backups\Bitwarden'
+$user          = @("user-1l@outlook.de","user-2@outlook.de")
+$extension     = "json"
 
 function Set-Password {
     [CmdletBinding()]
@@ -137,9 +137,6 @@ foreach ($u in $user) {
     Write-Host "`nBackup-Datei" -ForegroundColor Green
     # Install-Module -Name 7zip4PowerShell -Verbose
     $SecureString = Set-Password
-    if (-not $BACKUP_PASSWD) {
-        $SecureString = Set-Password
-    }
     
     Compress-7zip -Path $backupDateFolder `
             -OutputPath "$userBackupFolder" `
