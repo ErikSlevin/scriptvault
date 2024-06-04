@@ -1,8 +1,8 @@
 # Bitwarden Passwort-Manager Backup-Skript für zwei Konten
 
 # Konfigurationen
-$server        = "bitwarden.selfhosted.de"
-$backupFolder  = 'C:\Users\............'
+$server        = "bitwarden.erikslevin.de"
+$backupFolder  = 'C:\Users\erikw\OneDrive\06 - Backups\Bitwarden'
 $user          = @("user-1","user-2")
 $extension     = "json"
 function Set-Password {
