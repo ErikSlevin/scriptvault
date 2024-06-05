@@ -2,10 +2,81 @@
 #  Install-Module -Name 7Zip4Powershell  #
 ##########################################
 
-$server        = "bitwarden.selfhosted.de"
-$backupFolder  = 'C:\Users\erik\OneDrive\06 - Backups\Bitwarden'
-$user          = @("user-1l@outlook.de","user-2@outlook.de")
-$extension     = "json"
+# Standardwerte, die verwendet werden, wenn die Konfigurationsdatei nicht existiert
+$defaultServer = "selfhosted-bitwarden.server.com"
+$defaultBackupFolder = "C:\my-backup-folder\Bitwarden"
+$defaultEmails = @("bitwarden-user-1@gmx.de", "bitwarden-user-2@outlook.de", "bitwarden-user-3@gmail.de")
+
+# Optional
+# Pfad zur Konfigurationsdatei Aufbau:
+#
+# [Secrets]
+# server=selfhosted-bitwarden.server.com
+# backupFolder=C:\my-backup-folder\Bitwarden
+# 
+# [Users]
+# user=bitwarden-user-1@gmx.de,bitwarden-user-2@outlook.de,bitwarden-user-3@gmail.de
+$configFilePath = "C:\Users\erikw\Documents\GitHub\scriptvault\bitwarden-backup\config.ini"
+
+# Funktion zum Laden der Konfigurationsdatei
+function Load-Config($path) {
+    if (Test-Path $path) {
+        try {
+            # Konfigurationsdatei einlesen
+            $iniContent = Get-Content -Path $path
+
+            # Hashtable zur Speicherung der Konfigurationswerte
+            $config = @{}
+
+            # Abschnitt und Schlüssel-Wert-Paare auslesen
+            $section = ""
+            foreach ($line in $iniContent) {
+                $line = $line.Trim()
+                if ($line -match "^\[(.+?)\]$") {
+                    $section = $matches[1]
+                    $config[$section] = @{}
+                } elseif ($line -match "^([^=]+)=(.+)$") {
+                    $key = $matches[1].Trim()
+                    $value = $matches[2].Trim()
+                    if ($section) {
+                        $config[$section][$key] = $value
+                    }
+                }
+            }
+            return $config
+        } catch {
+            Write-Error "Fehler beim Laden der Konfigurationsdatei: $_"
+            return $null
+        }
+    } else {
+        Write-Host "Konfigurationsdatei nicht gefunden, Standardwerte werden verwendet."
+        return $null
+    }
+}
+
+# Konfigurationsdatei laden
+$config = Load-Config $configFilePath
+
+# Variablen setzen, abhängig davon, ob die Konfigurationsdatei geladen wurde oder nicht
+if ($null -ne $config) {
+    if ($config.ContainsKey("Secrets")) {
+        $server = $config.Secrets.server
+        $backupFolder = $config.Secrets.backupFolder
+    } else {
+        $server = $defaultServer
+        $backupFolder = $defaultBackupFolder
+    }
+
+    if ($config.ContainsKey("Users")) {
+        $emails = $config.Users.emails -split ","
+    } else {
+        $emails = $defaultEmails
+    }
+} else {
+    $server = $defaultServer
+    $backupFolder = $defaultBackupFolder
+    $emails = $defaultEmails
+}
 
 function Set-Password {
     [CmdletBinding()]
@@ -69,18 +140,18 @@ if ($server) {
 }
 Write-Host "`n"
 
-foreach ($u in $user) {
-    Write-Host "Sichere Bitwarden-Daten fuer Benutzer: $u"
-
+foreach ($user in $emails) {
+    Write-Host "Sichere Bitwarden-Daten fuer Benutzer: $user"
+    
     # Masterpasswort abfragen und anmelden
-    $masterPass = Read-Host -Prompt "Bitte geben Sie Ihr Masterpasswort fuer $u ein" -AsSecureString 
+    $masterPass = Read-Host -Prompt "Bitte geben Sie Ihr Masterpasswort fuer $user ein" -AsSecureString 
     $masterPass = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto([System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($masterPass))
 
     $loggedIn = $false
 
     while (-not $loggedIn) {
         try {
-            $key = bw login $u $masterPass --raw
+            $key = bw login $user $masterPass --raw
             if ($key) {
                 Write-Host "`nAnmeldung erfolgreich." -ForegroundColor Green
                 $env:BW_SESSION = $key
@@ -96,8 +167,8 @@ foreach ($u in $user) {
 
     # Backup-Dateinamen erstellen
     $timestamp      = Get-Date -Format "yyyy-MM-dd"
-    $backupFile     = "$timestamp-$u.$extension"
-    $userBackupFolder = Join-Path -Path $backupFolder -ChildPath $u
+    $backupFile     = "$timestamp-$user.json"
+    $userBackupFolder = Join-Path -Path $backupFolder -ChildPath $user
     $backupDateFolder = Join-Path -Path $userBackupFolder -ChildPath $timestamp
     $attachmentFolder = Join-Path -Path $backupDateFolder -ChildPath "Anlagen"
 
@@ -105,10 +176,12 @@ foreach ($u in $user) {
     Write-Host "Synchronisiere Bitwarden-Tresor..."
     bw sync | Out-Null
     Write-Host "Exportiere Bitwarden-Tresor..."
+
     if (-not (Test-Path -Path $backupDateFolder)) {
         New-Item -Path $backupDateFolder -ItemType Directory | Out-Null
     }
-    bw export --output "$backupDateFolder\$backupFile" --format $extension $masterPass | Out-Null
+
+    bw export --output "$backupDateFolder\$backupFile" --format "json" $masterPass | Out-Null
     Write-Host "Bitwarden-Tresor erfolgreich exportiert." -ForegroundColor Green
 
     # Anhaenge sichern
@@ -120,14 +193,14 @@ foreach ($u in $user) {
     foreach ($item in $vault){
         if($item.PSobject.Properties.Name -contains "Attachments"){
             foreach ($attachment in $item.attachments){
-                $exportName = if ($item.Login.Username) { "$($item.name) - $($item.Login.Username) - $($attachment.fileName)" } else { "$($item.name) - $($attachment.fileName)" }
+                $exportName = if ($item.Login.Username) { "$($item.name) - $($attachment.fileName)" } else { "$($item.name) - $($attachment.fileName)" }
                 bw get attachment $attachment.id --itemid $item.id --output "$attachmentFolder\$exportName" | Out-Null
                 Write-Host "Anhang gesichert: $exportName"
             }
         }
     }
 
-    Write-Host "`nAlle Anhaenge erfolgreich gesichert fuer Benutzer: $u" -ForegroundColor Green
+    Write-Host "`nAlle Anhaenge erfolgreich gesichert fuer Benutzer: $user" -ForegroundColor Green
 
     # Abmelden
     Write-Host "`nMelde vom Tresor ab..."
