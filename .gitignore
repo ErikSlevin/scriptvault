@@ -1,1 +1,2 @@
 *.env
+bitwarden-backup/config.ini
