@@ -63,7 +63,7 @@ $config = Load-Config $configFilePath
 
 # Check if the configuration was loaded successfully and set server, backup folder, and emails accordingly
 # Überprüfe, ob die Konfiguration erfolgreich geladen wurde und setze entsprechend Server, Backup-Ordner und E-Mail-Adressen
-if ($null -ne $config) {
+if ($config -ne $null) {
     if ($config.ContainsKey("Secrets")) {
         $server = $config.Secrets.server
         $backupFolder = $config.Secrets.backupFolder
