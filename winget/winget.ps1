@@ -1,5 +1,6 @@
 # Definiere ein 2D-Array mit den Paketnamen und IDs, alphabetisch sortiert
 $applications = @(
+    @("3D Connetion","3Dconnexion.3DxWare.10")                  # 3D Connection
     @("7-Zip", "7zip.7zip"),                                    # 7-Zip
     @("Bambu Studio", "Bambulab.Bambustudio"),                  # Bambu Studio
     @("Bitwarden", "Bitwarden.Bitwarden"),                      # Bitwarden
@@ -28,6 +29,10 @@ $applications = @(
     @("PDF24 Creator", "geeksoftwareGmbH.PDF24Creator")         # PDF24 Creator
 )
 
+# ANSI Escape Code für grünen Text
+$green = "`e[32m"
+$reset = "`e[0m"
+
 # Gesamte Anzahl der Pakete
 $totalPackages = $applications.Length
 $installedPackages = @()
@@ -43,12 +48,13 @@ for ($i = 0; $i -lt $totalPackages; $i++) {
     Write-Host "Aktuelle Installation: $appName"
     Write-Host "Paket $currentPackageNumber von $totalPackages"
     Write-Host "Gesamtfortschritt: $progress%"
+    Write-Host ""
 
     # Versuche, das Paket zu installieren und fange mögliche Fehler ab
     try {
         winget install --id $appId -h --accept-package-agreements --accept-source-agreements
         # Paket als installiert markieren
-        $installedPackages += "$appName installiert ✓"
+        $installedPackages += "$appName installiert ${green}✓${reset}"
     } catch {
         Write-Host "Fehler beim Installieren von $appName ($appId): $_"
     }
@@ -56,5 +62,4 @@ for ($i = 0; $i -lt $totalPackages; $i++) {
     # Terminal löschen und den Installationsstatus ausgeben
     Clear-Host
     $installedPackages | ForEach-Object { Write-Host $_ }
-    Write-Host "Derzeit wird $appName installiert"
 }
