@@ -1,49 +1,42 @@
-### Bitwarden Password Manager Backup Script (One or Multi Accounts)
+# Bitwarden Backup Skript
 
----
+Dieses PowerShell-Skript dient dazu, die Daten eines Bitwarden-Benutzers zu sichern, einschließlich der Anhänge, und sie in einem selbstgehosteten oder Standard-Bitwarden-Tresor zu exportieren. Es ermöglicht auch das Sichern der Anhänge und das Verschlüsseln des Backups.
 
-**English Description:**
+## Voraussetzungen
 
-This script provides a convenient way to back up Bitwarden password manager data for two accounts. It exports both account data and attachments securely to your specified backup location.
+- PowerShell 5.1 oder höher
+- Bitwarden CLI: Installieren Sie das Bitwarden CLI-Tool gemäß den Anweisungen unten.
 
-#### Configurations:
+## Bitwarden CLI Installation
 
-- **Server:** Enter the URL of your self-hosted Bitwarden server or leave it blank to use the default Bitwarden server.
-- **Backup Folder:** Specify the directory where you want to store the backups.
-- **User:** Provide the usernames of the Bitwarden accounts you want to back up.
-- **Extension:** Define the file extension for the backup files (e.g., "json" for JSON format).
+Stellen Sie sicher, dass Bitwarden und die erforderlichen Module in Ihrer PowerShell-Umgebung ordnungsgemäß installiert und konfiguriert sind, bevor Sie das Skript ausführen.
 
-#### Usage:
+1. **Installieren Sie Chocolatey:** Chocolatey ist ein Paketmanager für Windows. Führen Sie den folgenden Befehl in einer erhöhten PowerShell-Konsole aus, um Chocolatey zu installieren:
+   
+   ```powershell
+   Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+   ```
 
-1. Configure the script by providing the server URL, backup folder path, usernames, and file extension.
-2. Run the script in PowerShell.
-3. Enter the master passwords for each user when prompted.
-4. The script will sync the Bitwarden vault, export the data, secure attachments, and save them to the specified backup folder.
+2. **Installieren Sie Bitwarden CLI:** Verwenden Sie den folgenden Befehl, um Bitwarden CLI mit Chocolatey zu installieren:
 
----
+   ```powershell
+   choco install bitwarden-cli
+   ```
 
-**Deutsche Beschreibung:**
+3. **Installieren Sie das 7zip4PowerShell-Modul:** Verwenden Sie den folgenden Befehl in PowerShell, um das 7zip4PowerShell-Modul zu installieren:
 
-Dieses Skript bietet eine bequeme Möglichkeit, Daten des Bitwarden-Passwortmanagers für einen oder mehrere Konten zu sichern. Es exportiert sowohl die Kontodaten als auch Anlagen sicher in den angegebenen Backup-Ordner.
+   ```powershell
+   Install-Module -Name 7Zip4Powershell
+   ```
 
-#### Konfigurationen:
+### Beispielkonfigurationsdatei (`config.ini`)
 
-- **Server:** Geben Sie die URL Ihres selbst gehosteten Bitwarden-Servers ein oder lassen Sie das Feld leer, um den Standard-Bitwarden-Server zu verwenden.
-- **Backup-Ordner:** Geben Sie das Verzeichnis an, in dem Sie die Backups speichern möchten.
-- **Benutzer:** Geben Sie die Benutzernamen der Bitwarden-Konten an, die Sie sichern möchten.
-- **Erweiterung:** Definieren Sie die Dateierweiterung für die Backup-Dateien (z. B. "json" für das JSON-Format).
+```ini
+[Secrets]
+server=selfhosted-bitwarden.server.com
+backupFolder=C:\my-backup-folder\Bitwarden
 
-#### Verwendung:
+[Users]
+emails=bitwarden-user-1@gmx.de,bitwarden-user-2@outlook.de,bitwarden-user-3@gmail.de
+```
 
-1. Konfigurieren Sie das Skript, indem Sie die Server-URL, den Backup-Ordnerpfad, die Benutzernamen und die Dateierweiterung angeben.
-2. Führen Sie das Skript in PowerShell aus.
-3. Geben Sie bei Aufforderung die Masterpasswörter für jeden Benutzer ein.
-4. Das Skript synchronisiert den Bitwarden-Tresor, exportiert die Daten, sichert Anhänge und speichert sie im angegebenen Backup-Ordner.
-
----
-
-Bitte beachten Sie: Stellen Sie sicher, dass Bitwarden und die erforderlichen Module in Ihrer PowerShell-Umgebung ordnungsgemäß installiert und konfiguriert sind, bevor Sie das Skript ausführen.
-
-* https://chocolatey.org/install
-* Run Powershell as Admin: ```Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))```
-* ```choco install bitwarden-cli```
