@@ -1,0 +1,28 @@
+! Vlan in der VLAN Datenbank anlegen:
+vlan 10
+
+! IPv4-Routing aktivieren:
+ip routing
+
+! Anlegen eines IP-Interface im Vlan <vlan-id>:
+! Hinweis: Damit das SVI in den Status "up" geht, muss das passende VLAN in der Datenbank 
+! vorhanden sein und ein physischer Port mit dem VLAN aktiv sein.
+interface vlan <vlan-id>
+
+! Bei L2-Switchen zwingend deaktieren !!
+! Routed Port aktivieren:
+! no switchport
+
+! Kontrolle 
+show ip interface brief
+show interfaces status
+show vlan [brief]
+show interface trunk
+show ip interface vlan <vlan-id>
+
+
+! Transportnetz
+interface gi 0/1
+no switchport
+ip address 192.168.0.1 255.255.255.0
+no shutdown

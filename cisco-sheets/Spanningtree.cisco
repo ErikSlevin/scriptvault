@@ -1,0 +1,43 @@
+! Portfast auf allen Schnittstellen, die nicht als Trunk konfiguriert sind, aktiviern:
+spanning-tree portfast default
+
+! Alternativ einzene Ports definieren als Portfast, um an Spanning Tree nicht teilzunehmen
+! interface range gi 1/0, gi 2/0
+! spanning-tree portfast
+
+! MST aktivieren
+spanning-tree mode mst
+! spanning-tree mode pvst
+
+! In den MST Konfigurationsmodus wechseln:
+spanning-tree mst configuration
+
+! Name, Revisionsnummer und Instanz-Definition müssen auf allen Switchen einer
+! MST-Region identisch konfiguriert sein!
+name ITSBw
+revision 1
+instance 1 vlan 17,42,60-69
+instance 2 vlan 23,70-79
+
+instance 2 vlan 7-16,18-41,43-59,70
+
+! Prioritäten festlegen
+! (config) Modus
+! SW1
+spanning-tree mst 1 root primary
+spanning-tree mst 2 root secondary
+
+!SW2
+spanning-tree mst 2 root primary
+spanning-tree mst 1 root secondary
+
+! Alternative:
+! Prioritätswert festlegen
+! (config)#spanning-tree mst <Nr> priority <Wert>
+
+! Kontrolle
+show spanning-tree mst configuration 
+show spanning-tree mst configuration digest 
+show spanning-tree mst 
+show spanning-tree
+show spanning-tree mst interface <If-Typ> <Nr>

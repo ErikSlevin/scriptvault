@@ -1,0 +1,24 @@
+enable
+configure terminal
+hostname CSw2
+ip domain-name lab.basic
+username admin privilege 15 secret geheim
+enable secret cisco
+clock timezone Z 0
+ip arp proxy disable
+service password-encryption
+no ip domain lookup
+crypto key generate rsa modulus 2048
+ip ssh version 2
+vtp mode transparent
+line con 0
+logging synchronous
+login local
+exec-timeout 0 0
+line vty 0 15
+logging synchronous
+login local
+exec-timeout 2 0
+transport input ssh
+exit
+do write

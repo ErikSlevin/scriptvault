@@ -1,0 +1,43 @@
+! OSPF Prozess aktivieren:
+router ospf <Process-ID>
+
+! Konfiguration einer expliziten Router-ID, welche das Format einer IP-Adresse hat:
+router-id <id>
+
+! Aktivieren eines spezifischen Interfaces für den OSPF-Prozess:
+ip ospf <process-id> area <area-id>
+
+! Hinterlegen eines Schlüssels auf dem teilnehmenden Interface:
+ip ospf message-digest-key <KeyID> md5 <Key>
+
+! Aktivierung der Authentifizierung auf dem teilnehmenden Interface:
+ip ospf authentication message-digest
+
+! Vergabe einer expliziten Priorität für die DR/BDR Wahl:
+! Werte: 0 bis 255 (default = 1)
+ip ospf priority <Nummer>
+
+! Festlegen eines passiven Interfaces:
+[no] passive-interface [<Interface>|default]
+
+!Festlegen des Netzwerk-Typs auf Point-to-Point:
+ip ospf network point-to-point
+
+! Statische Routen in den OSPF-Prozess redistributieren:
+redistribute static subnets
+
+! Default-Route redistributieren:
+! Primäre Verbindung nutzen bei 2 Routern ins Internet: default-information originate metric type 1 
+! Für load balancing - Metric wird hier 1 statt OSPF Extern 2
+default-information originate
+
+show ip protocols
+show ip route [ospf]
+show ip ospf neighbor
+show ip ospf
+show ip ospf [interface <Interface>]
+show run | sec ospf
+debug ip ospf [adj|hello]
+debug ip ospf adj
+debug ip ospf hello
+debug ip ospf packet

@@ -1,0 +1,407 @@
+#														 	#
+#        					PC1								#  
+#														 	#  
+ip 192.0.8.15 255.255.255.0 192.0.8.2
+save
+
+#														 	#
+#        					PC2								#  
+#														 	#  
+ip 172.0.8.4 255.255.255.0 172.0.8.1
+save
+
+! Anmerkung: auf DHCP umzustellen
+! ip dhcp
+
+#				A C C E S S         S W I T C H				#
+#        					ASw1								#  
+#														 	#  
+! erase startup-config
+! Grundkonfiguration
+enable
+configure terminal
+hostname ASw1
+ip domain-name r.s.basic
+username admin privilege 15 secret sanfran
+enable secret cisco
+clock timezone Z 0
+ip arp proxy disable
+service password-encryption
+no ip domain lookup
+crypto key generate rsa modulus 2048
+ip ssh version 2
+vtp mode transparent
+line con 0
+logging synchronous
+login local
+exec-timeout 0 0
+line vty 0 15
+logging synchronous
+login local
+exec-timeout 2 0
+transport input ssh
+exit
+do write
+
+! VLAN Interfaces anlegen
+vlan 10
+name Daten1
+vlan 20
+name Daten2
+vlan 30
+name Transfer
+
+! Interface zum APC
+interface gi0/3
+switchport host 
+switchport access vlan 10
+no shutdown
+
+! Interface zum CSw1
+interface g0/0
+switchport trunk encapsulation dot1q 
+switchport mode trunk
+switchport trunk allowed vlan 10
+no shutdown
+
+! Interface zum CSw1
+interface g0/1
+switchport trunk encapsulation dot1q 
+switchport mode trunk
+switchport trunk allowed vlan 10
+no shutdown
+
+#				A C C E S S         S W I T C H				#
+#        					ASw2								#  
+#														 	#  
+! erase startup-config
+! Grundkonfiguration
+enable
+configure terminal
+hostname ASw2
+ip domain-name r.s.basic
+username admin privilege 15 secret sanfran
+enable secret cisco
+clock timezone Z 0
+ip arp proxy disable
+service password-encryption
+no ip domain lookup
+crypto key generate rsa modulus 2048
+ip ssh version 2
+vtp mode transparent
+line con 0
+logging synchronous
+login local
+exec-timeout 0 0
+line vty 0 15
+logging synchronous
+login local
+exec-timeout 2 0
+transport input ssh
+exit
+do write
+
+! VLAN Interfaces anlegen
+vlan 10
+name Daten1
+vlan 20
+name Daten2
+vlan 30
+name Transfer
+show vlan brief
+
+! Interface zum APC
+interface gi0/3
+switchport host 
+switchport access vlan 20
+no shutdown
+
+! Interface zum CSw2
+interface g0/0
+switchport trunk encapsulation dot1q 
+switchport mode trunk
+switchport trunk allowed vlan 20
+no shutdown
+
+! Interface zum CSw2
+interface g0/1
+switchport trunk encapsulation dot1q 
+switchport mode trunk
+switchport trunk allowed vlan 20
+no shutdown
+
+#					C O R E      S W I T C H				 	#
+#        					CSw1								#  
+#														 	#  
+! erase startup-config
+! Grundkonfiguration
+enable
+configure terminal
+hostname CSw1
+ip domain-name r.s.basic
+username admin privilege 15 secret sanfran
+enable secret cisco
+clock timezone Z 0
+ip arp proxy disable
+service password-encryption
+no ip domain lookup
+crypto key generate rsa modulus 2048
+ip ssh version 2
+vtp mode transparent
+line con 0
+logging synchronous
+login local
+exec-timeout 0 0
+line vty 0 15
+logging synchronous
+login local
+exec-timeout 2 0
+transport input ssh
+exit
+do write
+
+! VLAN Interfaces anlegen
+vlan 10
+name Daten1
+vlan 20
+name Daten2
+vlan 30
+name Transfer
+do show vlan brief
+
+! VLAN Interface IP-Konfig
+interface VLAN 10
+ip address 192.0.8.2 255.255.255.0
+no shutdown
+
+interface VLAN 20
+ip address 172.0.8.2 255.255.255.0
+no shutdown
+
+interface VLAN 30
+ip address 10.0.0.5 255.255.255.248
+no shutdown
+
+! Interface zum ASw1
+interface g0/2
+switchport trunk encapsulation dot1q 
+switchport mode trunk
+switchport trunk allowed vlan 10
+no shutdown
+
+! Interface zum ASw2
+interface g0/3
+switchport trunk encapsulation dot1q 
+switchport mode trunk
+switchport trunk allowed vlan 20
+no shutdown
+
+! Etherchannel zum CSw2 
+default interface range gi1/0-1
+interface range gi1/0-1
+shutdown
+channel-group 1 mode active
+exit
+port-channel load-balance src-dst-ip
+interface port-channel 1
+shutdown
+flowcontrol receive on
+switchport trunk encapsulation dot1q 
+switchport mode trunk
+switchport trunk allowed vlan 10,20,30
+no shutdown
+
+! HSRP Konfiguration
+interface vlan 10
+standby version 2
+standby 10 ip 192.0.8.1
+standby 10 priority 110
+standby 10 authentication md5 key-string 0 superpasswort10
+service password-encryption
+
+interface vlan 20
+standby version 2
+standby 20 ip 172.0.8.1
+standby 20 priority 90
+standby 20 authentication md5 key-string 0 superpasswort10
+service password-encryption
+
+interface vlan 30
+standby version 2
+standby 30 ip 10.0.0.4
+standby 30 priority 110
+standby 30 authentication md5 key-string 0 superpasswort30
+service password-encryption
+
+
+#					C O R E      S W I T C H				 	#
+#        					CSw2								#  
+#														 	#  
+! erase startup-config
+! Grundkonfiguration
+enable
+configure terminal
+hostname CSw2
+ip domain-name r.s.basic
+username admin privilege 15 secret sanfran
+enable secret cisco
+clock timezone Z 0
+ip arp proxy disable
+service password-encryption
+no ip domain lookup
+crypto key generate rsa modulus 2048
+ip ssh version 2
+vtp mode transparent
+line con 0
+logging synchronous
+login local
+exec-timeout 0 0
+line vty 0 15
+logging synchronous
+login local
+exec-timeout 2 0
+transport input ssh
+exit
+do write
+
+! VLAN Interfaces anlegen
+vlan 10
+name Daten1
+vlan 20
+name Daten2
+vlan 30
+name Transfer
+do show vlan brief
+
+! VLAN Interface IP-Konfig
+interface VLAN 10
+ip address 192.0.8.3 255.255.255.0
+no shutdown
+
+interface VLAN 20
+ip address 172.0.8.3 255.255.255.0
+no shutdown
+
+interface VLAN 30
+ip address 10.0.0.6 255.255.255.248
+no shutdown
+
+! Interface zum ASw2
+interface g0/2
+switchport trunk encapsulation dot1q 
+switchport mode trunk
+switchport trunk allowed vlan 20
+no shutdown
+
+! Interface zum ASw1
+interface g0/3
+switchport trunk encapsulation dot1q 
+switchport mode trunk
+switchport trunk allowed vlan 10
+no shutdown
+
+! Etherchannel zum CSw1 
+default interface range gi1/0-1
+interface range gi1/0-1
+shutdown
+channel-group 1 mode passive ! Gegenstelle
+exit
+port-channel load-balance src-dst-ip
+interface port-channel 1
+shutdown
+flowcontrol receive on
+switchport trunk encapsulation dot1q 
+switchport mode trunk
+switchport trunk allowed vlan 10,20,30
+no shutdown
+
+! Interface zum DHCP
+interface gi3/3
+no switchport
+ip address 20.20.20.0 255.255.255.254
+no shutdown
+
+! DHCP IP Helper mit zeiger zum Server
+interface vlan 20
+ip helper-address 20.20.20.1
+
+! HSRP Konfiguration
+interface vlan 10
+standby version 2
+standby 10 ip 192.0.8.1
+standby 10 priority 90
+standby 10 authentication md5 key-string 0 superpasswort10
+service password-encryption
+
+interface vlan 20
+standby version 2
+standby 20 ip 172.0.8.1
+standby 20 priority 110
+standby 20 authentication md5 key-string 0 superpasswort10
+service password-encryption
+
+interface vlan 30
+standby version 2
+standby 30 ip 10.0.0.4
+standby 30 priority 90
+standby 30 authentication md5 key-string 0 superpasswort30
+service password-encryption
+
+
+#					D H C P   S E R V E R					 	#
+#        					DHCP								#  
+#														 	#  
+
+! erase startup-config
+! Grundkonfiguration
+enable
+configure terminal
+hostname DHCP
+ip domain-name r.s.basic
+username admin privilege 15 secret sanfran
+enable secret cisco
+clock timezone Z 0
+ip arp proxy disable
+service password-encryption
+no ip domain lookup
+crypto key generate rsa modulus 2048
+ip ssh version 2
+line con 0
+logging synchronous
+login local
+exec-timeout 0 0
+line vty 0 15
+logging synchronous
+login local
+exec-timeout 2 0
+transport input ssh
+exit
+do write
+
+! Interface zum CSw1
+interface gi0/1
+ip address 20.20.20.1 255.255.255.254
+no shutdown
+
+! DHCP Bereich deklaieren
+ip dhcp pool VLAN20
+network 172.0.8.0 255.255.255.0
+ip dhcp excluded-address 10.0.0.1 10.0.0.99
+default-router 172.0.8.1
+lease 7 8 0 
+
+! Rückroute schreiben für DHCP Pakete zum Kundennetz
+ip route 172.0.8.0 255.255.255.0 gi0/1 20.20.20.0
+
+interface 
+show vlan brief
+show vlan brief
+
+
+show int trunk 
+show ip interface brief 
+
+show interfaces fastEthernet 0/24 switchport
+show interfaces status
+show interfaces trunk
+show vtp status

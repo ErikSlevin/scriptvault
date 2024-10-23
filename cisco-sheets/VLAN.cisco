@@ -1,0 +1,62 @@
+! In der Reihenfolge VLANS anlegen
+
+! 1. Schritt
+! VLAN ID definieren
+vlan 10
+name Mgnt
+
+vlan 20
+name Daten
+
+vlan 99
+name Daten
+
+! 2. Trunkports definieren
+interface range gi 0/1-2
+description Verbindung zum RT3 gi0/3
+switchport trunk encapsulation dot1q 
+switchport mode trunk
+switchport trunk allowed vlan 10,20,30,50,500,555
+
+! NACHTRÄGLICH hinzufügen eines VLANS
+! switchport trunk allowed vlan add 300
+
+! VLAN vom Switchport entfernen
+! switchport trunk allowed vlan remove 100
+
+! Trunk zu Native 
+! switchport trunk native vlan 200
+
+
+
+! 3. Access Port
+interface gi1/0
+
+! Port als access setzen 
+! portfast, Etherchannel und Accessport in einem Befehl für den Port
+switchport host 
+
+! Vlan zuweisen
+switchport access vlan 100
+
+! Kontrolle
+show int trunk 
+show ip interface brief 
+show vlan brief
+show interfaces fastEthernet 0/24 switchport
+show interfaces status
+show interfaces trunk
+show vtp status
+
+
+vlan 10
+name Daten_1
+
+vlan 20
+name Daten_2
+
+vlan 30
+name Mgmt
+
+vlan 50
+name Daten_Trans

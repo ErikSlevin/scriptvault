@@ -1,0 +1,41 @@
+! ################################### DHCP Server Konfiguration
+
+! DHCP-Pool anlegen:
+ip dhcp pool VLAN10
+
+! Subnetz aus dem IP's verteilt werden sollen
+network 10.0.0.0 255.255.255.0
+
+! Einrichten eines DHCP-Server-Dienstes: Exclusions definieren:
+! Einzeln: ip dhcp excluded-address 10.0.0.1 
+ip dhcp excluded-address 10.0.0.1 10.0.0.50
+
+! Zu verteilendes Default-Gateway festlegen:
+default-router 10.0.0.1
+
+! Lease-Time (7 Tage, 8 Stunden und 0 Minuten)
+lease 7 8 0 
+
+! Zu verteilenden DNS-Server festlegen:
+dns-server 10.0.0.0.5
+
+show running-config | section dhcp
+show ip dhcp
+show ip dhcp bindings
+
+! ################################### IP Helper
+! Ist die IP-Adresse vom DHCP Server
+ip helper-address 1.2.3.4
+
+
+! ################################### CLIENT InterfaceKonfiguration
+! DHCP-Client aktivieren:
+! Interface bezieht IP-Adresse von einem DHCP-Server
+ip address dhcp
+
+! Einrichten einer IP-Helper-Adresse:
+! IP Helper muss die IP Adresse des DHCP Servers sein.
+! Es können meherer IP Helper-Adressen eingetragen werden.
+ip helper-address <IP>
+
+show ip helper-address

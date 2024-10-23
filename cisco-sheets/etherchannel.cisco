@@ -1,0 +1,29 @@
+! Werkszustand herstellen
+
+default interface range gi0/0-2
+interface range GigabitEthernet 0/0-3
+channel-group 1 mode on
+shutdown
+no shutdown
+exit
+interface port-channel 1
+! Ab hier erst speziell konfiguration !
+
+flowcontrol receive on
+
+
+! Loadbalance
+port-channel load-balance src-dst-mac
+!	dst-ip
+!	dst-mac
+!	src-dst-ip
+!	src-dst-mac
+!	src-ip
+!	src-mac
+
+no shutdown
+
+! Kontrolle
+show etherchannel summary 
+show etherchannel 1 port-channel
+show interfaces GigabitEthernet 0/1 etherchannel

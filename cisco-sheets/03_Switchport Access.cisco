@@ -1,0 +1,3 @@
+interface gi1/0
+switchport host 
+switchport access vlan 100

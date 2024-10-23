@@ -1,0 +1,37 @@
+! 1. Router
+ipv6 unicast-routing
+
+! 2. Router Interface
+ipv6 address FE80::2 link-local
+ipv6 address FDDD::2/64
+
+! 3. Routing
+ipv6 route 2000:dead:beef::/64 gi0/0 FE80::2
+
+! 4. Kontrolle
+show ipv6 interface brief
+show ipv6 route
+
+! Switch (default mäßig an)
+! sdm prefer dual-ipv4-and-ipv6 routing
+
+! Router fürs Interface
+! ipv6 enable
+
+! Kontrolle
+conf
+show ipv6 route
+
+
+!csw1
+ipv6 route FDDD::/64 gi0/2 FE80::2
+
+!csw2
+ipv6 route FD00::/64 gi0/2 FE80::1
+
+!rt1
+ipv6 route 2024::/64 gi0/2 FE80::1
+
+ipv6 address FE80::1 link-local
+
+ipv6 route ::/0 gi0/0 FE80::100

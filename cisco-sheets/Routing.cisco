@@ -1,0 +1,58 @@
+
+! Statische Route anlegen
+! ip route 192.168.178.0 255.255.255.0 FA 0/2 10.0.2.254
+ip route <Netz-ID> <SNM> [<Interface>] <NextHop vom Router>
+
+! Default Route anlegen
+ip route 0.0.0.0 0.0.0.0 [<Interface>] <Next Hop>
+
+! l2-Switch Default Gateway
+ip default-gateway 192.168.0.1
+
+! Routing anlten
+ip routing
+
+! Kontrolle
+show running-config | section ip route
+show ip route
+show running-config | section ip route
+show ip route [static | connected]
+
+
+! ----------------------------------
+! ------ B E I S P I E L E ---------
+! ----------------------------------
+
+! ### 1 Statisches Routen mit NextHop
+! --- ROUTER A
+interface gi0/0
+ip address 10.0.0.1 255.255.255.252
+no shutdown
+interface gi0/1
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+ip route 192.168.0.0 255.255.255.0 10.0.0.2
+
+! --- ROUTER B
+interface gi0/0
+ip address 10.0.0.2 255.255.255.252
+no shutdown
+interface gi0/1
+ip address 192.168.0.1 255.255.255.0
+no shutdown
+ip route 192.168.1.0 255.255.255.0 10.0.0.1
+
+! ### 2 Default Route
+! --- ROUTER
+interface gi0/0
+ip address 10.0.0.1 255.255.255.252
+no shutdown
+interface gi0/1
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+ip route 0.0.0.0 0.0.0.0 10.0.0.2
+
+! ### 3 Default Route
+! --- ROUTER A
+
+Konfiguration statische Route mit Zusammenfassung:

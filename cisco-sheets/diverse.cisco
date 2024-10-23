@@ -1,0 +1,5 @@
+! Spanning Tree
+show span
+
+! Proxy ARP global deaktivieren:
+ip arp proxy disable

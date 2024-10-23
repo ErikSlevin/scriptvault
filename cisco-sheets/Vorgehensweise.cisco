@@ -1,0 +1,20 @@
+1. Layer 2
+	- IST ZUstand Verifizieren 
+	- VLan erzeugen
+	- Access
+	- Trunk
+	- MSTP
+2. Layer 3
+	-IP Adresse + pingen
+	- HSRP + Ping Vlan 
+	- VLAN übergreifend
+	- Intervlan Routing
+	
+! Access	
+show VLan
+show int trunk
+
+! Core
+show ip int brief
+show standby brief
+show run int vlan 20

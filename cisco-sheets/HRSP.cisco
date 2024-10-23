@@ -1,0 +1,58 @@
+! ####################################### Grundsätzliche Konfiguration
+! HSRP Version 2 einstellen (VLAN Interface vorher rein gehen!)
+(config-if)#standby version 2
+
+! Gruppen ID gleich VLAN ID !!!!!!!!!!
+! Festlegen der Virtuellen IP für eine HSRP Gruppe auf einem Interface:
+(config-if)#standby 1042 ip 172.16.42.1
+
+
+20 ip 172.0.8.1
+! Der Router mit der höchsten Priorität wird "Active-Router". Die Priorität ist im Default 100.
+! Zum Anpassen der Priorität: Der Router mit der Höchsten ID wird Active !
+(config-if)#standby 1042 priority 80
+
+! Aktivieren der MD5-Authentifizierung für einen HSRP-Prozess:
+(config-if)#standby 1042 authentication md5 key-string 0 hsrp1042
+
+! Mittels diesem bereits bekannten Befehl werden Passwörter in der running-config mit einem Sichtschutz versehen:
+(config)#service password-encryption
+
+! ####################################### Überwachung wenn Interface down geht 
+!Track mit der Nummer <TrackNr> anlegen welcher das Line-Protocol des Interfaces <IF-ID> überwacht:
+(config)#track (Beliebige nummer - nicht hsrp gruppe) interface gi 0/0 line-protocol
+track 1 interface gi 0/0 line-protocol
+
+
+
+!Ein zuvor angelgter Track wird mit einem HSRP-Prozess verknüpft. Dabei wird die Verringerung
+! der Priorität des HSRP-Routers um den vorgebgeben Wert <Zahl> definiert:
+(config-if)#standby 1017 track 1 decrement 50
+
+! Beispiel: Track 1 wird angelegt und soll das Line-Protocol vom Interface GigabitEthernet 0/1 überwachen.
+Sw1(config)#track 1 interface GigabitEthernet 0/1 line-protocol
+
+! Der Track wird jetzt an den bereits konfigurierten HSRP auf dem Interface VLAN 30 gebunden. 
+! Bei einem Ausfall von GigabitEthernet 0/1 soll die Priorität des Routers um 20 verringert werden.
+Sw1(config)#interface vlan 30
+Sw1(config-if)#standby 30 track 1 decrement 20
+
+! Soll ein Router mit höherer Priorität den "Active-Status" übernehmen muss dazu Preemption aktiviert werden:
+(config-if)#standby <GrpNr> preempt
+
+! Festlegen eines lokal gültigen Namens für die HSRP-Gruppe:
+(config-if)#standby <GrpNr> name <Name>
+
+! Beispiel:
+! Sw1(config-if)#standby 30 authentication md5 key-string 0 P@ssw0rd
+! Sw1(config)#service password-encryption
+
+show standby | include Priority
+show standby | include Active
+show standby brief
+show track
+show ip sla summary
+
+debug standby
+debug standby terse
+debug standby errors

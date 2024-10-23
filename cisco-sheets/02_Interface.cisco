@@ -1,0 +1,42 @@
+! INTERFACE KONFIGURATION ASW ####################################################
+
+int vlan 1
+ip address 172.16.10.3 255.255.255.0
+no shut
+
+int gi 0/1
+switchport trunk encapsulation dot1q
+switchport mode trunk
+no shut
+
+! INTERFACE KONFIGURATION CSW ####################################################
+! Wenn der L3 Switch nicht routen soll:
+! no ip routing
+int gi 0/1
+switchport trunk encapsulation dot1q
+switchport mode trunk
+no shut
+
+int gi 0/0
+no switchport 
+ip address 172.16.20.2 255.255.255.0
+no shut
+
+int vlan 1
+ip address 172.16.10.2 255.255.255.0
+no shut
+
+! INTERFACE KONFIGURATION Rt1 ####################################################
+
+int gi 0/0
+ip address 172.16.20.1 255.255.255.0
+no shut
+
+! INTERFACE KONFIGURATION APC ####################################################
+
+ip 192.168.0.100/25 192.168.0.1
+save
+
+! SHOW BEFEHLE  ##################################################################
+show ip interface brief
+show interfaces status

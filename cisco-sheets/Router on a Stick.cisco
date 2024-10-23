@@ -1,0 +1,20 @@
+! Aktivieren des Interfaces
+no shutdown
+
+! Erzeugen eines Subinterface x.10 ist das VLAN-Tag
+interface gi0/2.10
+
+! Art des Protokolls definieren und VLAN zuordnen
+encapsulation dot1q <VLAN-ID>
+
+! Kontrolle
+! Die folgenden Befehle sind nur auf dem ROUTER möglich.
+show ip interface brief
+
+! Anzeige von Interfaces, deren Status und Einstellungen:
+show interfaces status
+show vlan [brief]
+show interface trunk
+show ip route
+show interface trunk
+showinterface status
