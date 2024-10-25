@@ -2,10 +2,6 @@
 #         AD-USER  ERSTELLEN     #
 #--------------------------------#
 
-#--------------------------------#
-#         AD-USER  ERSTELLEN     #
-#--------------------------------#
-
 
 # $DomainName = pod03.spielwiese.intern
 $DomainName = (Get-WmiObject -Class Win32_ComputerSystem).Domain
