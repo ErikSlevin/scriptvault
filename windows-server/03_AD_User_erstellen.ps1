@@ -2,18 +2,36 @@
 #         AD-USER  ERSTELLEN     #
 #--------------------------------#
 
-$DomainName = "pod03.spielwiese.intern"
+#--------------------------------#
+#         AD-USER  ERSTELLEN     #
+#--------------------------------#
+
+
+# $DomainName = pod03.spielwiese.intern
+$DomainName = (Get-WmiObject -Class Win32_ComputerSystem).Domain
+
+Clear-Host
+Write-Host ""
+Write-Host -ForegroundColor Green $DomainName
+Write-Host ""
+$confirmation = Read-Host "Der FQDN der Domain istr ichtig? (Ja/Nein)"
+
+if ($confirmation -ne "Ja") {
+    Write-Host "Das Skript wird beendet."
+    return
+}
+
 $users = @(
-    'Max Müller',
-    'Sophie Schmidt',
-    'John Schneider',
-    'Emily Fischer',
-    'Lukas Weber',
-    'Anna Meyer',
+    'Maximilian Müller',
+    'Sophie Roffel',
+    'John Günter',
+    'Emily Kranz',
+    'Lukas Krazewtzki',
+    'Anna Seelenburg',
     'Michael Wagner',
-    'Laura Becker',
+    'Laura Bäcker',
     'Tim Hoffmann',
-    'Julia Koch'
+    'Julia Lipktus'
 )
 
 # Domain-Variable
@@ -72,9 +90,10 @@ if ($confirmation -eq "Ja") {
                        -PassThru | Out-Null
             Write-Host -ForegroundColor Green "$($user.DisplayName) ($($user.SamAccountName)) erstellt."
         } catch {
-            Write-Host "Fehler: $($user.DisplayName): $_"
+            Write-Host -ForegroundColor Red "Fehler: $($user.DisplayName): $_"
         }
     }
 } else {
     Write-Host "Keine Benutzer wurden erstellt."
 }
+
