@@ -37,7 +37,8 @@ $checkedListBox.Location = New-Object System.Drawing.Point(20, 20)
 $attributeList = @(
     @("Surname", "Nachname des Benutzers", "Beispiel: Müller (String)"),
     @("GivenName", "Vorname des Benutzers", "Beispiel: Max (String)"),
-    @("AccountPassword", "Passwort für den Account", "Beispiel: Pa$$w0rd (String)"),
+    @("GroupMember", "Gruppenmitgliedschaft", "Beispiel: Benutzer ist Mitglied in GG_2_Kompanie, GG_S6_Fw - Die Gruppen werden automatisch erstellt!"),
+    @("AccountPassword", "Passwort für den Account", "Beispiel: Pa$$w0rd (String) (Wenn nicht vergeben wird Pa$$w0rd vergeben.)"),
     @("Name", "Vollständiger Name des Benutzers", "Beispiel: Max Müller (String)"),
     @("SamAccountName", "Login-Name des Benutzers", "Beispiel: maxmueller (String)"),
     @("UserPrincipalName", "E-Mail-ähnlicher Login-Name", "Beispiel: maxmueller@bundeswehr.de (String)"),
@@ -73,7 +74,7 @@ $attributeList = @(
 )
 
 # Füge die Attributnamen zur CheckBox-Liste hinzu und setze vorausgewählte Attribute
-$preselectedAttributes = @("Surname", "GivenName", "AccountPassword")
+$preselectedAttributes = @("Surname", "GivenName", "GroupMember")
 foreach ($attr in $attributeList) {
     $index = $checkedListBox.Items.Add($attr[0])
     if ($attr[0] -in $preselectedAttributes) {
@@ -237,3 +238,87 @@ if ($vkResult[4] -eq "I" -and $vkResult[45] -eq "O") {$formSelectAttributes.Show
 
 # Ausgabe der eingegebenen Daten nach dem Schließen des Formulars
 $enteredData
+
+# Durchlaufe jeden Benutzer in der Liste
+foreach ($user in $enteredData) {
+    # Prüfe, ob das "GroupMember"-Attribut existiert
+    if ($user.PSObject.Properties.Match('GroupMember')) {
+        # Extrahiere die Gruppenmitgliedschaften und splitte sie in eine Liste
+        $groupList = $user.GroupMember -split ",\s*"  # Splitte den String nach Komma und optionalem Leerzeichen
+        
+        # Durchlaufe jede Gruppe und stelle sicher, dass sie existiert
+        foreach ($group in $groupList) {
+            # Prüfen, ob die Gruppe bereits existiert
+            $existingGroup = Get-ADGroup -Filter { Name -eq $group } -ErrorAction SilentlyContinue
+            
+            if (-not $existingGroup) {
+                # Wenn die Gruppe nicht existiert, erstelle sie
+                Write-Host "Gruppe '$group' existiert nicht. Erstelle sie..."
+                New-ADGroup -Name $group -GroupScope Global -PassThru
+            } else {
+                Write-Host "Gruppe '$group' existiert bereits."
+            }
+        }
+    }
+
+    # Leeres Hash-Table für die Parameter des Benutzers
+    $ADUserParams = @{}
+
+    # Durchlaufe alle Eigenschaften des $user-Objekts und füge sie den Parametern hinzu
+    foreach ($property in $user.PSObject.Properties) {
+        if ($null -ne $property.Value -and $property.Value -ne "") {
+            # Besondere Behandlung des AccountPassword
+            if ($property.Name -eq "AccountPassword") {
+                # Wenn das AccountPassword leer oder null ist, setze ein Standardpasswort
+                if ($property.Value -eq $null -or $property.Value -eq "") {
+                    $SecurePassword = ConvertTo-SecureString "Passw0rd" -AsPlainText -Force
+                    $ADUserParams.Add("AccountPassword", $SecurePassword)
+                } else {
+                    # Konvertiere das angegebene Passwort in ein SecureString
+                    $SecurePassword = ConvertTo-SecureString $property.Value -AsPlainText -Force
+                    $ADUserParams.Add("AccountPassword", $SecurePassword)
+                }
+            }
+            elseif ($property.Name -ne "GroupMember") {
+                # Füge den Parameter hinzu, wenn der Wert nicht leer oder null ist
+                $ADUserParams.Add($property.Name, $property.Value)
+            }
+        }
+    }
+
+    # Überprüfe und setze SamAccountName, wenn er leer oder nicht gesetzt ist
+    if (-not $ADUserParams.ContainsKey("UserPrincipalName") -or [string]::IsNullOrEmpty($ADUserParams["UserPrincipalName"])) {
+        $UserPrincipalName = ($user.GivenName + $user.Surname) -replace "\s+", ""  # Entfernt Leerzeichen, falls welche im Namen vorhanden sind
+        $DomainName = (Get-WmiObject -Class Win32_ComputerSystem).Domain
+        $ADUserParams["UserPrincipalName"] = $UserPrincipalName+"@"+$DomainName 
+    }
+
+    # Überprüfe und setze SamAccountName, wenn er leer oder nicht gesetzt ist
+    if (-not $ADUserParams.ContainsKey("SamAccountName") -or [string]::IsNullOrEmpty($ADUserParams["SamAccountName"])) {
+        $SamAccountName = ($user.GivenName + $user.Surname) -replace "\s+", ""  # Entfernt Leerzeichen, falls welche im Namen vorhanden sind
+        $DomainName = (Get-WmiObject -Class Win32_ComputerSystem).Domain
+        $ADUserParams["SamAccountName"] = $SamAccountName
+    }
+
+    # Überprüfe und setze DisplayName, wenn er leer oder nicht gesetzt ist
+    if (-not $ADUserParams.ContainsKey("DisplayName") -or [string]::IsNullOrEmpty($ADUserParams["DisplayName"])) {
+        $DisplayName = ($user.GivenName + " " + $user.Surname).Trim()  # Vorname Nachname mit Leerzeichen
+        $ADUserParams["DisplayName"] = $DisplayName
+    }
+
+    # Überprüfe und setze 'Name', wenn er leer oder nicht gesetzt ist
+    if (-not $ADUserParams.ContainsKey("Name") -or [string]::IsNullOrEmpty($ADUserParams["Name"])) {
+        $Name = ($user.GivenName + $user.Surname).Trim()
+        $ADUserParams["Name"] = $Name
+    }
+
+    New-ADUser @ADUserParams
+
+    # Wenn Gruppenmitgliedschaften angegeben sind, füge den Benutzer den Gruppen hinzu
+    if ($user.PSObject.Properties.Match('GroupMember')) {
+        foreach ($group in $groupList) {
+            # Füge den Benutzer der entsprechenden Gruppe hinzu
+            Add-ADGroupMember -Identity $group -Members  $ADUserParams["SamAccountName"]
+        }
+    }
+}
