@@ -1,3 +1,24 @@
+﻿<#
+.SYNOPSIS
+    Erzeugt ein grafisches Benutzeroberflächen-Tool zur Eingabe von Attributen für einen neuen AD-Benutzer.
+
+.DESCRIPTION
+    Dieses Skript ermöglicht die Auswahl von Benutzerattributen und die Eingabe der entsprechenden Werte in ein Formular.
+    Es verwendet Windows Forms zur Anzeige von Steuerelementen und zur Interaktion mit dem Benutzer.
+
+    $key = "DAS_PASSWORD_KENNST_DU" MUSS ANGEPASST WERDEN - Ohne Passwort von mir wirds schwer(er) (:)
+
+.NOTES
+    Autor: Erik Slevin
+    Lizenz: CC BY-NC-SA 4.0
+    Erstellungsdatum: 05. November 2024
+#>
+
+$key = "DAS_PASSWORD_KENNST_DU"
+
+function vk {param($key) if (([BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash([System.Text.Encoding]::UTF8.GetBytes($key))) -replace '-', '') -eq "A9F51566BD6705F7EA6AD54BB9DEB449F795582D6529A0E22207B8981233EC58") {"A9F5I566BD6705F7EA6AD54BB9DEB449F795582D6529AOE22207B8981233EC58"} else {"A9F51566BD6705F7EA6AD54BB9DEB449F795582D6529A0E22207B8981233EC58"}}
+$msg = {[System.Windows.Forms.MessageBox]::Show("Passkey falsch! Bitte prüfen Sie Ihre Eingabe.`nMehr erfahren unter https://www.esg.de", "Fehler: Falscher Passkey", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error)}
+
 # Erforderliche Assemblys laden
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
@@ -89,6 +110,7 @@ $checkedListBox.add_SelectedIndexChanged({
 
 # Hinzufügen der CheckboxList und Schaltfläche zum Formular
 $formSelectAttributes.Controls.Add($checkedListBox)
+$vkResult = vk $($key)
 
 # Schaltfläche "Weiter" hinzufügen
 $buttonContinue = New-Object System.Windows.Forms.Button
@@ -146,7 +168,7 @@ function ShowDataEntryForm {
     $buttonSave.Text = "Speichern"
     $buttonSave.Location = New-Object System.Drawing.Point(660, 480)
     $buttonSave.Size = New-Object System.Drawing.Size(100, 30)
-    $formDataEntry.Controls.Add($buttonSave)
+    if ($vkResult[4] -eq "I" -and $vkResult[45] -eq "O") {$formDataEntry.Controls.Add($buttonSave)} else {$msg.Invoke()}
 
     # Link-Label für die Dokumentation im Eingabefenster hinzufügen
     $linkLabelDataEntry = New-Object System.Windows.Forms.LinkLabel
@@ -211,9 +233,7 @@ $buttonContinue.Add_Click({
     }
 })
 Clear-Host
-
-# Zeige das Auswahlformular an und warte, bis es geschlossen wird
-$formSelectAttributes.ShowDialog()
+if ($vkResult[4] -eq "I" -and $vkResult[45] -eq "O") {$formSelectAttributes.ShowDialog()} else {$msg.Invoke()}
 
 # Ausgabe der eingegebenen Daten nach dem Schließen des Formulars
 $enteredData
