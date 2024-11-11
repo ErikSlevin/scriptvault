@@ -180,7 +180,7 @@ function New-DL-Group {
         
         # Erstellen der 4 Domain-lokalen Gruppen und Zuordnen der Beschreibungen
         $GroupVariants = @(
-            @{ Name = "DL_${BaseGroupName}_R"; Description = "$($BaseGroupName): LESEN" },
+            @{ Name = "DL_${BaseGroupName}_R"; Description = "$($BaseGroupName): Lesen" },
             @{ Name = "DL_${BaseGroupName}_RW"; Description = "$($BaseGroupName): Lesen und Schreiben" },
             @{ Name = "DL_${BaseGroupName}_RX"; Description = "$($BaseGroupName): Lesen, Schreiben und Ausführen" },
             @{ Name = "DL_${BaseGroupName}_FA"; Description = "$($BaseGroupName): Vollzugriff" }
