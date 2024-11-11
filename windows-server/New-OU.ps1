@@ -73,6 +73,6 @@ function Get-DomainDN {
 New-OU -OUName "Benutzer" -ParentOU $(Get-DomainDN)
 New-OU -OUName "Administratoren" -ParentOU "OU=Benutzer,$(Get-DomainDN)"
 New-OU -OUName "Dienste" -ParentOU "OU=Benutzer,$(Get-DomainDN)"
-New-OU -OUName "Gruppen" -ParentOU Get-DomainDN
+New-OU -OUName "Gruppen" -ParentOU  $(Get-DomainDN)
 New-OU -OUName "DL_Gruppen" -ParentOU "OU=Gruppen,$(Get-DomainDN)"
 New-OU -OUName "GG_Gruppen" -ParentOU "OU=Gruppen,$(Get-DomainDN)"
