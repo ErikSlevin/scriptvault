@@ -1,0 +1,186 @@
+# Ermittle Distinguished Name 
+function Get-DomainDN {
+    <#
+    .SYNOPSIS
+    Holt den Distinguished Name (DN) der aktuellen Domain.
+    
+    .DESCRIPTION
+    Diese Funktion ermittelt den Distinguished Name (DN) der aktuellen Domain und fragt den Benutzer 
+    nach Bestätigung, dass der ermittelte Domain-Name korrekt ist.
+
+    .EXAMPLE
+    $DomainDN = Get-DomainDN
+    Gibt den Distinguished Name der aktuellen Domain zurück.
+    
+    .NOTES
+    Erforderlich: Active Directory-Modul für PowerShell
+    #>
+
+    # Holt den FQDN (Fully Qualified Domain Name) der lokalen Maschine
+    $DomainName = (Get-WmiObject -Class Win32_ComputerSystem).Domain
+    
+    # Gibt den Distinguished Name (DN) der Domain zurück
+    return (Get-ADDomain).DistinguishedName
+}
+
+function New-DL-Group {
+    <#
+    .SYNOPSIS
+    Erstellt Domain-lokale Active Directory-Gruppen mit den Präfixen "DL_Gruppenname_R", "DL_Gruppenname_RW", "DL_Gruppenname_RX" und "DL_Gruppenname_FA" in der OU "DL-Gruppen".
+    
+    .DESCRIPTION
+    Diese Funktion erstellt für jede übergebene Gruppe in der OU "DL-Gruppen" vier Domain-lokale Gruppen:
+    - DL_Gruppenname_R
+    - DL_Gruppenname_RW
+    - DL_Gruppenname_RX
+    - DL_Gruppenname_FA
+    
+    Der Gruppenname wird jeweils mit dem Präfix "DL_" ergänzt und eine passende Beschreibung wird für jede Gruppe gesetzt:
+    - DL_Gruppenname_R: LESEN auf Gruppenname
+    - DL_Gruppenname_RW: LESEN und SCHREIBEN auf Gruppenname
+    - DL_Gruppenname_RX: LESEN und SCHREIBEN und AUSFÜHREN auf Gruppenname
+    - DL_Gruppenname_FA: VOLLZUGRIFF auf Gruppenname
+    
+    .PARAMETER GroupNames
+    Eine durch Kommata getrennte Liste von Gruppennamen (ohne Präfix), für die die Domain-lokalen Gruppen erstellt werden sollen.
+    
+    .EXAMPLE
+    New-DL_Group -GroupNames "Admin,Sales,HR"
+    Erstellt die Gruppen:
+    - DL_Admin_R, DL_Admin_RW, DL_Admin_RX, DL_Admin_FA
+    - DL_Sales_R, DL_Sales_RW, DL_Sales_RX, DL_Sales_FA
+    - DL_HR_R, DL_HR_RW, DL_HR_RX, DL_HR_FA
+    
+    .NOTES
+    Erforderlich: Active Directory-Modul für PowerShell
+    #>
+
+    param (
+        [string]$GroupNames,  # Durch Komma getrennte Liste von Gruppennamen
+        [boolean]$verbose = $false
+    )
+    
+    # Durch die Gruppenliste iterieren
+    $GroupNames.Split(',') | ForEach-Object {
+        $BaseGroupName = $_.Trim()  # Entfernt Leerzeichen
+        $first_OU="OU=$((((Get-DomainDN) -split ',')[0] -replace 'DC=', ''))"
+        $GroupPath = "OU=DL_Gruppen,OU=Gruppen,$($first_OU),$(Get-DomainDN)"  # Pfad zur OU "Gruppen"
+        
+        # Erstellen der 4 Domain-lokalen Gruppen und Zuordnen der Beschreibungen
+        $GroupVariants = @(
+            @{ Name = "DL_${BaseGroupName}_R"; Description = "$($BaseGroupName): Lesen" },
+            @{ Name = "DL_${BaseGroupName}_RW"; Description = "$($BaseGroupName): Lesen und Schreiben" },
+            @{ Name = "DL_${BaseGroupName}_RX"; Description = "$($BaseGroupName): Lesen, Schreiben und Ausführen" },
+            @{ Name = "DL_${BaseGroupName}_FA"; Description = "$($BaseGroupName): Vollzugriff" }
+        )
+        
+        foreach ($GroupVariant in $GroupVariants) {
+            $GroupName = $GroupVariant.Name
+            $GroupDescription = $GroupVariant.Description
+
+            # Prüft, ob die Gruppe bereits existiert
+            if (-not (Get-ADGroup -Filter { Name -eq $GroupName } -SearchBase $GroupPath -ErrorAction SilentlyContinue)) {
+                # Wenn die Gruppe nicht existiert, wird sie erstellt
+                New-ADGroup -Name $GroupName -Path $GroupPath -GroupScope DomainLocal -GroupCategory Security
+                
+                Write-Host -Foreground Green "$GroupName' erstellt."
+                        
+                # Setzt die Beschreibung der Gruppe
+                Set-ADGroup -Identity $GroupName -Description $GroupDescription
+            } else {
+
+                if ($verbose) {
+                    # Wenn die Gruppe bereits existiert, wird eine Nachricht ausgegeben
+                    Write-Host  -Foreground Red "$GroupName' existiert bereits."
+                }
+            }
+        }
+    }
+}
+
+function New-Shares {
+    param (
+        [Parameter(Mandatory=$true)]
+        [Array]$freigaben
+    )
+
+    foreach ($freigabe in $freigaben) {
+        $ordnerPfad = Join-Path -Path $freigabe.Pfad -ChildPath $freigabe.Name
+
+        # Prüfen, ob der Ordner existiert, und ihn ggf. erstellen
+        if (-not (Test-Path -Path $ordnerPfad)) {
+            New-Item -Path $ordnerPfad -ItemType Directory -Force | Out-Null
+            Write-Host -ForegroundColor Yellow "Erstelle Ordner: $ordnerPfad"
+        } 
+
+        $DL_Suffixe = @("R","RW","RX","FA")
+               
+        foreach($Suffix in $DL_Suffixe) {
+            $Groupname = "DL_" + ($freigabe.Freigabename) + "_" +"$Suffix"
+            $Groupexist = Get-ADGroup -Filter {Name -eq $Groupname} -ErrorAction SilentlyContinue
+
+            if (-not $Groupexist) {
+                New-DL-Group -GroupNames $freigabe.Freigabename -verbose $false
+            }
+            
+            if ($Suffix -eq "FA") {
+                (Get-ADGroup -Identity $Groupname).Name  | Add-ADGroupMember -Members (Get-ADUser -Identity "Administrator")
+            }
+        }
+
+
+        # Wenn die Freigabe nicht existiert, erstelle sie
+        if (-not (Get-SmbShare -Name ($freigabe.Freigabename) -ErrorAction SilentlyContinue)) {
+            Write-Host -ForegroundColor Yellow "Freigabe $($freigabe.Freigabename) existiert nicht - erstelle Freigabe"
+            New-SmbShare -Name $freigabe.Freigabename -Path $freigabe.Pfad -FolderEnumerationMode AccessBased | Out-null
+        }
+
+
+        $Share = (Get-SmbShare -Name ($freigabe.Freigabename))
+        Grant-SmbShareAccess $Share.Name -AccountName "Authenticated Users" -AccessRight Full -Force | Out-Null
+        Revoke-SmbShareAccess $Share.Name -AccountName 'Everyone' -Force | Out-Null
+        
+        Write-Host -ForegroundColor Magenta  "`n----------------------------`n"
+
+
+        $acl = Get-Acl -Path $freigabe.Pfad
+
+        $acl.SetAccessRuleProtection($true,$false)
+        $acl | Set-Acl $freigabe.Path
+
+        # Erstelle eine Liste von AccessRules basierend auf dem Suffix
+        $AccessRules = @()
+
+        foreach($Suffix in $DL_Suffixe) {
+            $Groupname = "DL_" + ($freigabe.Name) + "_" +"$Suffix"
+            switch ($Suffix) {
+                "R" { $AccessRules += New-Object System.Security.AccessControl.FileSystemAccessRule("$Groupname","Read","Allow") }
+                "RW" { $AccessRules += New-Object System.Security.AccessControl.FileSystemAccessRule("$Groupname","Modify","Allow") }
+                "RX" { $AccessRules += New-Object System.Security.AccessControl.FileSystemAccessRule("$Groupname","ReadAndExecute","Allow") }
+                "FA" { $AccessRules += New-Object System.Security.AccessControl.FileSystemAccessRule("$Groupname","FullControl","Allow") } 
+            }
+
+
+            foreach ($AccessRule in $AccessRules) {
+                $acl.SetAccessRule($AccessRule)
+            }
+
+            # Setze das ACL für den Freigabepfad
+            $acl | Set-Acl $freigabe.Pfad
+
+        }
+
+    }
+}
+
+# Beispielaufruf der Funktion
+$freigaben = @(
+    @{ Name = "Neuasd"; Freigabename = "Shareeasde"; Pfad = "C:\Datenads\" }
+
+)
+
+# Aufruf der Funktion, um die Ordner zu erstellen
+New-Shares -freigaben $freigaben
+
+
+$AccessRules[0].
