@@ -335,6 +335,97 @@ function New-Shares {
     }
 }
 
+# Funktionsaufruf zum Herstellen einer Remote-Powershell Verbindung
+function New-Remote-PSSession-from-DC {
+    <#
+    .SYNOPSIS
+    Ermittelt alle Server mit dem Betriebssystem Windows Server* aus dem Active Directory und ermöglicht dem Benutzer, einen Server auszuwählen, um eine Remote-PowerShell-Verbindung herzustellen.
+
+    .DESCRIPTION
+    Diese Funktion verwendet `Get-WmiObject` oder `Get-CimInstance`, um Server mit Betriebssystemen wie "Windows Server*" zu ermitteln. 
+    Der Benutzer kann einen Server aus einer Liste auswählen und eine Remote-PowerShell-Verbindung zu diesem Server herstellen.
+
+    .PARAMETER Filter
+    Ein optionaler Filter für den Betriebssystemtyp. Standardmäßig wird nach Windows Server-Varianten gesucht.
+
+    .PARAMETER Username
+    Ein optionaler Parameter für den Benutzernamen, der für die Remote-Verbindung verwendet werden soll.
+
+    .PARAMETER Password
+    Ein optionaler Parameter für das Passwort, das mit dem angegebenen Benutzernamen für die Remote-Verbindung verwendet werden soll.
+
+    .EXAMPLE
+    Get-ADServerAndConnect -Filter "Windows Server 2016" -Username "Administrator" -Password "P@ssw0rd"
+    Dies zeigt alle Server mit dem Betriebssystem "Windows Server 2016" an und stellt eine Remote-PowerShell-Verbindung zum ausgewählten Server her, ohne dass der Benutzer aufgefordert wird, Anmeldedaten einzugeben.
+
+    .NOTES
+    Erforderlich: Remoting muss auf den Servern aktiviert sein.
+    #>
+    param (
+        [string]$Filter = "Windows Server*",  # Standardmäßig nach allen Windows Servern suchen
+        [string]$Username,                    # Optional: Benutzername für die Remote-Verbindung
+        [string]$Password                     # Optional: Passwort für den Remote-Verbindung
+    )
+
+    # Suche nach Computern im AD, die ein Betriebssystem haben, das dem Filter entspricht
+    $servers = Get-ADComputer -Filter * -Property Name, OperatingSystem | Where-Object { $_.OperatingSystem -like $Filter }
+
+    # Überprüfen, ob Server gefunden wurden
+    if ($servers.Count -eq 0) {
+        Write-Host "Keine Server gefunden, die dem Filter entsprechen."
+        return
+    }
+
+    # Anzeige der Server zur Auswahl im GridView
+    $selectedServer = $servers | Select-Object Name, OperatingSystem |
+        Out-GridView -PassThru -Title "Wählen Sie einen Server aus"
+
+    # Wenn kein Server ausgewählt wurde, beenden
+    if (-not $selectedServer) {
+        Write-Host "Keine Auswahl getroffen, Abbruch der Verbindung."
+        return
+    }
+
+    # Servername des ausgewählten Servers
+    $serverName = $selectedServer.Name
+    Write-Host -ForegroundColor Green "    Server: $serverName"
+
+    # Überprüfen, ob Remoting auf dem Server aktiviert ist
+    $pingResult = Test-Connection -ComputerName $serverName -Count 1 -Quiet
+    if (-not $pingResult) {
+        Write-Host -ForegroundColor Red "Der Server $serverName ist nicht erreichbar. Überprüfen Sie die Netzwerkkonnektivität."
+        return
+    }
+
+    # Anmeldeinformationen vorbereiten
+    $credential = if ($Username -and $Password) {
+        # Wenn Benutzername und Passwort angegeben wurden, diese verwenden
+        $securePassword = ConvertTo-SecureString $Password -AsPlainText -Force
+        New-Object System.Management.Automation.PSCredential($Username, $securePassword)
+        $maskedPassword = -join ($Password.ToCharArray() | ForEach-Object { '*' })
+        Write-Host -ForegroundColor Green "      User: $Username"
+        Write-Host -ForegroundColor Green "  Passwort: $maskedPassword"
+    }
+    else {
+        # Andernfalls die Anmeldedaten interaktiv abfragen
+        Get-Credential
+    }
+
+    # Versuchen, eine Remote-PowerShell-Verbindung zu etablieren
+    try {
+        # Remote PowerShell Sitzung starten
+        Enter-PSSession -ComputerName $serverName -Credential $credential -Authentication Negotiate
+    }
+    catch {
+        Write-Host -ForegroundColor Red "Fehler beim Herstellen der Remoteverbindung: $_"
+    }
+}
+
+##################################################################
+
+# Herstellen einer Remote Powershell Verbindung
+New-Remote-PSSession-from-DC -Filter "Windows Server*" -Username "Administrator" -Password "MeinSuperPasswd"
+
 # Funktionsaufruf zur Erstellung der OU-Struktur
 Create-DomainOUStructure
 
@@ -347,7 +438,7 @@ New-DL-Group -GroupNames "Transfer_KpChef,Transfer_KpFw,Transfer_S2"
 # Funktionsaufruf zur Erstellung von Freigaben
 $freigaben = @(
     @{ Name = "Transfer_Chef"; Freigabename = "Transfer Chef"; Pfad = "C:\DFS\" },
-    @{ Name = "Transfer_Abteilung_A; Freigabename = "Transfer Abteilung A"; Pfad = "C:\DFS\" }
+    @{ Name = "Transfer_Abteilung_A"; Freigabename = "Transfer Abteilung A"; Pfad = "C:\DFS\" }
 )
 
 New-Shares -freigaben $freigaben
