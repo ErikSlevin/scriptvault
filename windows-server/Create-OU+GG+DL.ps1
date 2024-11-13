@@ -93,7 +93,7 @@ function Create-DomainOUStructure {
     Write-Host -ForegroundColor Green " └── Computer"
 }
 
-# Funktion zum Erstellen von Active Directory-Gruppen
+# Funktion zum Erstellen von Active Directory-GG-Gruppen
 function New-GG-Group {
     <#
     .SYNOPSIS
@@ -136,6 +136,7 @@ function New-GG-Group {
     }
 }
 
+# Funktion zum Erstellen von Active Directory-DL-Gruppen
 function New-DL-Group {
     <#
     .SYNOPSIS
@@ -169,7 +170,8 @@ function New-DL-Group {
     #>
 
     param (
-        [string]$GroupNames  # Durch Komma getrennte Liste von Gruppennamen
+        [string]$GroupNames,  # Durch Komma getrennte Liste von Gruppennamen
+        [boolean]$verbose = $false
     )
     
     # Durch die Gruppenliste iterieren
@@ -194,14 +196,141 @@ function New-DL-Group {
             if (-not (Get-ADGroup -Filter { Name -eq $GroupName } -SearchBase $GroupPath -ErrorAction SilentlyContinue)) {
                 # Wenn die Gruppe nicht existiert, wird sie erstellt
                 New-ADGroup -Name $GroupName -Path $GroupPath -GroupScope DomainLocal -GroupCategory Security
-                Write-Host -Foreground Green "$GroupName' erstellt."
                 
+                Write-Host -Foreground Green "$GroupName' erstellt."
+                        
                 # Setzt die Beschreibung der Gruppe
                 Set-ADGroup -Identity $GroupName -Description $GroupDescription
             } else {
-                # Wenn die Gruppe bereits existiert, wird eine Nachricht ausgegeben
-                Write-Host  -Foreground Red "$GroupName' existiert bereits."
+
+                if ($verbose) {
+                    # Wenn die Gruppe bereits existiert, wird eine Nachricht ausgegeben
+                    Write-Host  -Foreground Red "$GroupName' existiert bereits."
+                }
             }
+        }
+    }
+}
+
+# Funktionsaufruf zum erstellen von Freigaben
+function New-Shares {
+    <#
+    .SYNOPSIS
+    Erstellt Freigaben und zugehörige Gruppen für den Zugriff auf Ordner und gewährt Berechtigungen basierend auf den angegebenen Suffixen.
+    
+    .DESCRIPTION
+    Diese Funktion erstellt für jede übergebene Freigabe in der Liste:
+    - Den Ordner, falls er noch nicht existiert.
+    - Eine Reihe von Domain-lokalen Active Directory-Gruppen mit den Suffixen "R", "RW", "RX", "FA".
+    - Eine SMB-Freigabe für den Ordner, falls diese noch nicht existiert.
+    - Setzt NTFS-Berechtigungen für die Ordner basierend auf den Suffixen der Gruppen.
+    
+    .PARAMETER freigaben
+    Eine Liste von Hash-Tabellen, die die folgenden Eigenschaften für jede Freigabe enthalten:
+    - Name: Der Name des Ordners
+    - Freigabename: Der Name der SMB-Freigabe
+    - Pfad: Der vollständige Pfad zum Ordner
+    
+    .EXAMPLE
+    $freigaben = @(
+        @{ Name = "Transfer_Chef"; Freigabename = "Transfer Chef"; Pfad = "C:\DFS\" },
+        @{ Name = "Transfer_Abteilung_A; Freigabename = "Transfer Abteilung A"; Pfad = "C:\DFS\" }
+    )
+    New-Shares -freigaben $freigaben
+    Dies erstellt für die Freigabe "Transfer_Chef" im Pfad "C:\DFS\":
+    - Den Ordner, falls dieser noch nicht existiert.
+    - Die Gruppen "DL_Transfer_Chef_R", "DL_Transfer_Chef_RW", "DL_Transfer_Chef_RX", "DL_Transfer_Chef_FA".
+    - Eine SMB-Freigabe für den Ordner.
+    - NTFS-Berechtigungen basierend auf den Gruppen.
+    
+    .NOTES
+    Erforderlich: Active Directory-Modul für PowerShell, SMB-Modul für PowerShell.
+    #>
+    param (
+        [Parameter(Mandatory=$true)]
+        [Array]$freigaben  # Liste von Freigaben, die erstellt werden sollen
+    )
+
+    # Schleife über alle übergebenen Freigaben
+    foreach ($freigabe in $freigaben) {
+        # Pfad zum Ordner für die Freigabe erstellen
+        $ordnerPfad = Join-Path -Path $freigabe.Pfad -ChildPath $freigabe.Name
+
+        # Wenn der Ordner nicht existiert, erstelle ihn
+        if (-not (Test-Path -Path $ordnerPfad)) {
+            New-Item -Path $ordnerPfad -ItemType Directory -Force | Out-Null
+            Write-Host -ForegroundColor Yellow "Erstelle Ordner: $ordnerPfad"
+        }
+
+        # Liste der Suffixe, die für die Gruppen benötigt werden
+        $DL_Suffixe = @("R","RW","RX","FA")
+
+        # Schleife über alle Suffixe, um Gruppen zu erstellen
+        foreach ($Suffix in $DL_Suffixe) {
+            # Erstelle den Gruppennamen basierend auf dem Freigabenamen und dem Suffix
+            $Groupname = "DL_" + ($freigabe.Freigabename) + "_" + "$Suffix"
+            
+            # Überprüfe, ob die Gruppe bereits existiert
+            $Groupexist = Get-ADGroup -Filter {Name -eq $Groupname} -ErrorAction SilentlyContinue
+
+            # Falls die Gruppe nicht existiert, erstelle sie
+            if (-not $Groupexist) {
+                New-DL-Group -GroupNames $freigabe.Freigabename -verbose $false
+            }
+            
+            # Speziell für das Suffix "FA" (Full Access) fügen wir den Administrator als Mitglied hinzu
+            if ($Suffix -eq "FA") {
+                (Get-ADGroup -Identity $Groupname).Name | Add-ADGroupMember -Members (Get-ADUser -Identity "Administrator")
+            }
+        }
+
+        # Überprüfe, ob die SMB-Freigabe bereits existiert, wenn nicht, erstelle sie
+        if (-not (Get-SmbShare -Name ($freigabe.Freigabename) -ErrorAction SilentlyContinue)) {
+            Write-Host -ForegroundColor Yellow "Freigabe $($freigabe.Freigabename) existiert nicht - erstelle Freigabe"
+            New-SmbShare -Name $freigabe.Freigabename -Path $freigabe.Pfad -FolderEnumerationMode AccessBased | Out-null
+        }
+
+        # Hole die SMB-Freigabe und gewähre "Authenticated Users" vollen Zugriff
+        $Share = (Get-SmbShare -Name ($freigabe.Freigabename))
+        Grant-SmbShareAccess $Share.Name -AccountName "Authenticated Users" -AccessRight Full -Force | Out-Null
+        Revoke-SmbShareAccess $Share.Name -AccountName 'Everyone' -Force | Out-Null
+        Write-Host -ForegroundColor Magenta  "`n"
+
+        # Hole die aktuellen NTFS-Berechtigungen für den Ordner
+        $acl = Get-Acl -Path $freigabe.Pfad
+        $acl.SetAccessRuleProtection($true, $false)  # Setzt Schutz für die Berechtigungen (keine Vererbung)
+        $acl | Set-Acl $freigabe.Path
+
+        # Erstelle eine Liste von AccessRules basierend auf den Suffixen
+        $AccessRules = @()
+
+        foreach ($Suffix in $DL_Suffixe) {
+            # Erstelle den Gruppennamen für jedes Suffix
+            $Groupname = "DL_" + ($freigabe.Name) + "_" + "$Suffix"
+            
+            # Füge die entsprechenden Zugriffsregeln basierend auf dem Suffix hinzu
+            switch ($Suffix) {
+                "R" { 
+                    $AccessRules += New-Object System.Security.AccessControl.FileSystemAccessRule("$Groupname","Read","Allow") 
+                }
+                "RW" { 
+                    $AccessRules += New-Object System.Security.AccessControl.FileSystemAccessRule("$Groupname","Modify","Allow") 
+                }
+                "RX" { 
+                    $AccessRules += New-Object System.Security.AccessControl.FileSystemAccessRule("$Groupname","ReadAndExecute","Allow") 
+                }
+                "FA" { 
+                    $AccessRules += New-Object System.Security.AccessControl.FileSystemAccessRule("$Groupname","FullControl","Allow") 
+                } 
+            }
+
+            # Setze die erstellten AccessRules für den Ordner
+            foreach ($AccessRule in $AccessRules) {
+                $acl.SetAccessRule($AccessRule)
+            }
+
+            # Wende die neuen NTFS-Berechtigungen an
+            $acl | Set-Acl $freigabe.Pfad
         }
     }
 }
@@ -209,8 +338,16 @@ function New-DL-Group {
 # Funktionsaufruf zur Erstellung der OU-Struktur
 Create-DomainOUStructure
 
-# GG-Gruppen erstellen
+# Funktionsaufruf zur Erstellung von GG-Gruppen 
 New-GG-Group -GroupNames "Admin,Sales,HR"
 
-# GG-Gruppen erstellen
+# Funktionsaufruf zur Erstellung von DL-Gruppen 
 New-DL-Group -GroupNames "Transfer_KpChef,Transfer_KpFw,Transfer_S2"
+
+# Funktionsaufruf zur Erstellung von Freigaben
+$freigaben = @(
+    @{ Name = "Transfer_Chef"; Freigabename = "Transfer Chef"; Pfad = "C:\DFS\" },
+    @{ Name = "Transfer_Abteilung_A; Freigabename = "Transfer Abteilung A"; Pfad = "C:\DFS\" }
+)
+
+New-Shares -freigaben $freigaben
