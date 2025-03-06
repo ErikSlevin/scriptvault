@@ -1,120 +1,142 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*- 
-
+# -*- coding: utf-8 -*-
 """
-Dieses Script konvertiert einen fest definierten Text in SVG-Pfade basierend auf einer lokalen TTF-Schriftart.
-Zusätzlich wird ein SVG mit einem blauen Rechteck erzeugt.
+Modulares Python-Programm zur Konvertierung von Text in SVG-Pfade basierend auf einer lokalen TTF-Schriftart.
+Zusätzlich kann ein SVG mit einem Rechteck erzeugt werden.
 
 Voraussetzungen:
 - fonttools: pip install fonttools
 - svgwrite: pip install svgwrite
+
+Start im interaktiven Modus:
+   python main.py
+
+Direkter Aufruf:
+1. Text in SVG konvertieren:
+   python main.py --font "Schriftart.ttf" --text "Hallo Welt"
+
+2. Rechteck-SVG erzeugen:
+   python main.py --rect --width 61.8 --height 61.8 --radius 15
 """
 
-# Importiere benötigte Module
-from fontTools.ttLib import TTFont           # Zum Laden der TTF-Schriftart
-from fontTools.pens.svgPathPen import SVGPathPen  # Zum Erzeugen der SVG-Pfade
-import svgwrite  # Zum Erzeugen eines SVG mit einem Rechteck
+import argparse
+import os
+import svgwrite
+from fontTools.ttLib import TTFont
+from fontTools.pens.svgPathPen import SVGPathPen
 
-def text_to_svg(font_path, text, output_svg):
-    """
-    Konvertiert den angegebenen Text in SVG-Pfade basierend auf der TTF-Schriftart.
-    Das finale SVG-Dokument wird in die Datei 'output_svg' geschrieben.
-    """
-    # Lade die TTF-Schriftart aus dem lokalen Dateisystem
+def get_font_path(font_name: str) -> str:
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    font_dir = os.path.join(script_dir, "fonts")
+    return os.path.join(font_dir, font_name)
+
+def get_output_path(output_name: str) -> str:
+    if os.path.dirname(output_name):
+        return output_name
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    svg_dir = os.path.join(script_dir, "svg")
+    os.makedirs(svg_dir, exist_ok=True)
+    return os.path.join(svg_dir, output_name)
+
+def list_fonts() -> list:
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    font_dir = os.path.join(script_dir, "fonts")
+    return [f for f in os.listdir(font_dir) if f.endswith(".ttf")]
+
+def text_to_svg(font_name: str, text: str) -> None:
+    font_path = get_font_path(font_name)
+    output_svg = get_output_path(text[:24].replace(" ", "_") + ".svg")
     font = TTFont(font_path)
-    glyphSet = font.getGlyphSet()  # Extrahiere das Glyphen-Set
-    cmap = font["cmap"].getBestCmap()  # Mapping von Unicode-Codepunkten zu Glyphennamen
-    hmtx = font["hmtx"].metrics  # Horizontale Metriken (z.B. Advance-Width)
+    glyph_set = font.getGlyphSet()
+    cmap = font["cmap"].getBestCmap()
+    hmtx = font["hmtx"].metrics
+    ascent = font["hhea"].ascent
+    descent = font["hhea"].descent
 
-    # Abrufen der Schriftmetriken
-    ascent = font["hhea"].ascent  # Aufstiegswert (positiv)
-    descent = font["hhea"].descent  # Abstiegswert (meist negativ)
+    current_x = 0
+    paths = []
 
-    current_x = 0  # Startposition für die Platzierung der Glyphen
-    paths = []  # Liste zur Speicherung der SVG <path>-Elemente
-
-    # Verarbeite jeden Buchstaben im Text
     for char in text:
-        codepoint = ord(char)  # Bestimme den Unicode-Codepunkt des Zeichens
+        codepoint = ord(char)
         if codepoint not in cmap:
             print(f"Warnung: Zeichen '{char}' nicht in der Schriftart gefunden.")
-            continue  # Überspringe Zeichen, die nicht in der Schriftart enthalten sind
-        glyph_name = cmap[codepoint]  # Hole den Glyphennamen für das Zeichen
-        glyph = glyphSet[glyph_name]  # Greife auf das entsprechende Glyph zu
-
-        # Erzeuge den SVG-Pfad für das Glyph
-        pen = SVGPathPen(glyphSet)  # Initialisiere den SVGPathPen
-        glyph.draw(pen)  # Zeichne das Glyph mit dem Pen
-        path_data = pen.getCommands()  # Erhalte die SVG-Pfadbefehle
-
-        # Hole die Advance-Width (Platzbedarf) für das Glyph
+            continue
+        glyph_name = cmap[codepoint]
+        glyph = glyph_set[glyph_name]
+        pen = SVGPathPen(glyph_set)
+        glyph.draw(pen)
+        path_data = pen.getCommands()
         advance_width = hmtx[glyph_name][0]
+        paths.append(f'<path d="{path_data}" transform="translate({current_x}, 0)" />')
+        current_x += advance_width
 
-        # Erzeuge ein SVG <path>-Element mit einer Translation basierend auf der aktuellen x-Position
-        path_element = f'<path d="{path_data}" transform="translate({current_x}, 0)" />'
-        paths.append(path_element)  # Füge das Element zur Liste hinzu
-
-        current_x += advance_width  # Erhöhe die x-Position für das nächste Glyph
-
-    total_width = current_x  # Gesamte Breite des Textes
-
-    # Erzeuge den Inhalt des SVG-Dokuments
+    total_width = current_x
     svg_content = f'''<?xml version="1.0" standalone="no"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="{total_width}" height="{ascent - descent}" viewBox="0 {descent} {total_width} {ascent - descent}">
-  <!-- Gruppe zur Transformation der y-Achse, damit der Text korrekt ausgerichtet wird -->
   <g transform="translate(0, {ascent}) scale(1, -1)">
-    {" ".join(paths)}
+    {' '.join(paths)}
   </g>
 </svg>
 '''
-
-    # Schreibe den SVG-Inhalt in die Ausgabedatei
     with open(output_svg, "w", encoding="utf-8") as f:
         f.write(svg_content)
     print(f"SVG wurde erfolgreich erstellt: {output_svg}")
 
-def create_rectangle_svg(width, height, corner_radius=0):
-    """
-    Erzeugt eine SVG-Datei mit einem Rechteck. Die Werte für Breite, Höhe und Abrundungen (Eckenradius) können übergeben werden.
+def create_rectangle_svg(output_svg: str, width: float, height: float, corner_radius: float = 0) -> None:
+    # Erstellen des Dateinamens unter Berücksichtigung der Abmessungen des Rechtecks
+    rect_name = f"rect-B{width}xH{height}xR{corner_radius}"
+    output_svg = get_output_path(rect_name + ".svg")
     
-    :param width: Breite des Rechtecks in Millimetern (z.B. 61.8)
-    :param height: Höhe des Rechtecks in Millimetern (z.B. 61.8)
-    :param corner_radius: Abrundung der Ecken in Millimetern (Standardwert ist 0, keine Abrundung)
-    """
+    # Umrechnung des Eckenradius von mm in Pixel
     radius_px = corner_radius * 3.7795
     
-    # Erstellen der SVG-Datei mit Millimetern als Maßeinheit
-    dwg = svgwrite.Drawing('rectangle.svg', profile='tiny', size=(f'{width}mm', f'{height}mm'))
-
-    # Hinzufügen des Rechtecks mit blauer Füllung, schwarzer Kontur und optionaler Eckenabrundung
-    dwg.add(dwg.rect(insert=(0, 0), size=(f'{width}mm', f'{height}mm'), 
-                     fill='blue', stroke='black', stroke_width='1mm', 
-                     rx=radius_px, ry=radius_px))  # rx und ry für Eckenradius
-
-    # Speichern der SVG-Datei
+    # Erstellen des SVG-Dokuments
+    dwg = svgwrite.Drawing(output_svg, profile='tiny', size=(f'{width}mm', f'{height}mm'))
+    dwg.add(dwg.rect(insert=(0, 0), size=(f'{width}mm', f'{height}mm'),
+                      fill='blue', stroke='black', stroke_width='1mm',
+                      rx=radius_px, ry=radius_px))
     dwg.save()
-    print(f"SVG mit einem Rechteck von {width}mm x {height}mm und einer schwarzen Kontur von 1mm "
-          f"wurde als 'rectangle.svg' gespeichert. Eckenradius: {corner_radius}mm.")
+    print(f"SVG mit Rechteck gespeichert: {output_svg}")
 
-def main():
-    """
-    Hauptfunktion: Hier werden die Parameter fest definiert.
-    Passe einfach den Text in der Variable 'text' an.
-    """
-    # Erstelle das Rechteck SVG
-    create_rectangle_svg(61.8, 61.8, 15)  # Rechteck mit 100mm x 50mm und Eckenradius von 10mm
+def interactive_mode() -> None:
+    while True:
+        print("Was möchtest du tun?")
+        print("1: Text in SVG umwandeln")
+        print("2: Rechteck-SVG erstellen")
+        print("3: Beenden")
+        choice = input("Eingabe (1/2/3): ").strip()
 
-    # Pfad zur lokalen TTF-Schriftart (raw string, um Backslashes zu berücksichtigen)
-    font_path = r"C:\Users\erikw\Downloads\Sniglet-Regular.ttf"
-    
-    # Text, der in SVG konvertiert werden soll
-    text = "Hallo Welt"
-    
-    # Name der Ausgabedatei
-    output_svg = "output.svg"
-    
-    # Starte die Konvertierung von Text zu SVG
-    text_to_svg(font_path, text, output_svg)
+        if choice == "1":
+            while True:
+                fonts = list_fonts()
+                if not fonts:
+                    print("Keine Schriftarten im 'fonts'-Ordner gefunden.")
+                    return
+                print("Verfügbare Schriftarten:")
+                for i, font in enumerate(fonts, 1):
+                    print(f"{i}: {font}")
+                font_choice = input("Wähle eine Schriftart (Nummer eingeben): ").strip()
+                try:
+                    font_name = fonts[int(font_choice) - 1]
+                except (IndexError, ValueError):
+                    print("Ungültige Auswahl.")
+                    continue
+                text = input("Gib den Text ein, der in SVG umgewandelt werden soll: ").strip()
+                text_to_svg(font_name, text)
+                if input("Neuen Text eingeben? (j/n): ").strip().lower() != "j":
+                    break
+        elif choice == "2":
+            while True:
+                width = float(input("Breite des Rechtecks (mm): ").strip())
+                height = float(input("Höhe des Rechtecks (mm): ").strip())
+                radius = float(input("Eckenradius (mm, optional): ").strip() or "0")
+                create_rectangle_svg("rectangle.svg", width, height, radius)
+                if input("Neues Rechteck erstellen? (j/n): ").strip().lower() != "j":
+                    break
+        elif choice == "3":
+            break
+        else:
+            print("Ungültige Eingabe.")
 
 if __name__ == "__main__":
-    main()
+    interactive_mode()
