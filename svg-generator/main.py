@@ -73,19 +73,28 @@ def text_to_svg(font_path, text, output_svg):
         f.write(svg_content)
     print(f"SVG wurde erfolgreich erstellt: {output_svg}")
 
-def create_rectangle_svg():
+def create_rectangle_svg(width, height, corner_radius=0):
     """
-    Erzeugt eine SVG-Datei mit einem blauen Rechteck und einer schwarzen Kontur.
+    Erzeugt eine SVG-Datei mit einem Rechteck. Die Werte für Breite, Höhe und Abrundungen (Eckenradius) können übergeben werden.
+    
+    :param width: Breite des Rechtecks in Millimetern (z.B. 61.8)
+    :param height: Höhe des Rechtecks in Millimetern (z.B. 61.8)
+    :param corner_radius: Abrundung der Ecken in Millimetern (Standardwert ist 0, keine Abrundung)
     """
+    radius_px = corner_radius * 3.7795
+    
     # Erstellen der SVG-Datei mit Millimetern als Maßeinheit
-    dwg = svgwrite.Drawing('rectangle.svg', profile='tiny', size=('61.8mm', '61.8mm'))
+    dwg = svgwrite.Drawing('rectangle.svg', profile='tiny', size=(f'{width}mm', f'{height}mm'))
 
-    # Hinzufügen des Rechtecks mit blauer Füllung und schwarzer Kontur von 1mm
-    dwg.add(dwg.rect(insert=(0, 0), size=('61.8mm', '61.8mm'), fill='blue', stroke='black', stroke_width='1mm'))
+    # Hinzufügen des Rechtecks mit blauer Füllung, schwarzer Kontur und optionaler Eckenabrundung
+    dwg.add(dwg.rect(insert=(0, 0), size=(f'{width}mm', f'{height}mm'), 
+                     fill='blue', stroke='black', stroke_width='1mm', 
+                     rx=radius_px, ry=radius_px))  # rx und ry für Eckenradius
 
     # Speichern der SVG-Datei
     dwg.save()
-    print(f"SVG mit einem Rechteck von 61,8mm x 61,8mm und einer schwarzen Kontur von 1mm wurde als 'rectangle.svg' gespeichert.")
+    print(f"SVG mit einem Rechteck von {width}mm x {height}mm und einer schwarzen Kontur von 1mm "
+          f"wurde als 'rectangle.svg' gespeichert. Eckenradius: {corner_radius}mm.")
 
 def main():
     """
@@ -93,7 +102,7 @@ def main():
     Passe einfach den Text in der Variable 'text' an.
     """
     # Erstelle das Rechteck SVG
-    create_rectangle_svg()
+    create_rectangle_svg(61.8, 61.8, 15)  # Rechteck mit 100mm x 50mm und Eckenradius von 10mm
 
     # Pfad zur lokalen TTF-Schriftart (raw string, um Backslashes zu berücksichtigen)
     font_path = r"C:\Users\erikw\Downloads\Sniglet-Regular.ttf"
