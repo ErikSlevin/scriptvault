@@ -27,7 +27,7 @@ if ($allFiles.Count -eq 0) {
     $allFiles | ForEach-Object { Write-Host "📄 $_.Name" -ForegroundColor Yellow }
     Write-Host ""
 
-    # 📝 Benutzer fragen, ob alle verarbeitet oder ein anderes Datum eingegeben werden soll
+    # Benutzer fragen, ob alle verarbeitet oder ein anderes Datum eingegeben werden soll
     $useCustomDate = Read-Host "Möchten Sie alle gefundenen Dateien verarbeiten (Ja) oder ein Datum eingeben (YYYYMMDD)?"
 
     if ($useCustomDate -match "^\d{8}$") {
@@ -55,14 +55,14 @@ Write-Host ""
 Write-Host "================ Verarbeitung ================" -ForegroundColor Cyan
 Write-Host ""
 
-# 📁 Pfad für die neue Datei
+# Pfad für die neue Datei
 $newFilePath = Join-Path -Path $searchPath -ChildPath "Generierter Steckbrief by Erik.xlsx"
 
-# 🚀 Excel-Anwendung starten
+# Excel-Anwendung starten
 $excel = New-Object -ComObject Excel.Application
 $excel.Visible = $false
 
-# 📄 Bestehende Datei öffnen oder neu erstellen
+# Bestehende Datei öffnen oder neu erstellen
 if (Test-Path $newFilePath) {
     $newWorkbook = $excel.Workbooks.Open($newFilePath)
 } else {
@@ -76,17 +76,17 @@ foreach ($file in $files) {
     $excelFilePath = $file.FullName
     $folderName = (Get-Item -Path $excelFilePath).Directory.Name
 
-    # 📂 Original-Workbook öffnen
+    # Original-Workbook öffnen
     $workbook = $excel.Workbooks.Open($excelFilePath)
     
-    # 🆕 Neues Arbeitsblatt am Ende anlegen
+    # Neues Arbeitsblatt am Ende anlegen
     $newSheet = $newWorkbook.Sheets.Add()
     $newSheet.Name = $folderName
 
     # Sicherstellen, dass das neue Arbeitsblatt am Ende eingefügt wird
     $newSheet.Move($newWorkbook.Sheets[$newWorkbook.Sheets.Count])
 
-    # 📊 Spaltenbreiten setzen
+    # Spaltenbreiten setzen
     $newSheet.Columns.Item(1).ColumnWidth = 12
     $newSheet.Columns.Item(2).ColumnWidth = 60
     $newSheet.Columns.Item(3).ColumnWidth = 60
@@ -94,7 +94,7 @@ foreach ($file in $files) {
     $rowIndex = 2
     $lastBValue = ""
 
-    # 🔄 Arbeitsblätter durchlaufen
+    # Arbeitsblätter durchlaufen
     foreach ($sheet in $workbook.Sheets) {
         if ($sheet.Name -eq "Deckblatt" -or $sheet.Name -eq "Änderungsregister") { continue }
 
@@ -105,7 +105,7 @@ foreach ($file in $files) {
             $valueC = $sheet.Cells($i, 3).Value2
             $valueD = $sheet.Cells($i, 4).Value2
 
-            # 📝 Werte bereinigen
+            # Werte bereinigen
             if ($valueB -ne $null) {
                 $valueB = $valueB -replace "[\r\n]+", " " -replace "\s+", " " -replace "^\s+|\s+$", ""
             }
@@ -128,7 +128,7 @@ foreach ($file in $files) {
                 continue
             }
 
-            # 📌 Werte einfügen
+            # Werte einfügen
             if ($newSheet -ne $null) {
                 $newSheet.Cells.Item($rowIndex, 1).Value2 = $valueB
                 $newSheet.Cells.Item($rowIndex, 2).Value2 = [string]$valueD
@@ -138,16 +138,16 @@ foreach ($file in $files) {
         }
     }
 
-    # 📊 Tabelle formatieren
+    # Tabelle formatieren
     $tableRange = $newSheet.Range("A1:C" + ($rowIndex - 1))
     $table = $newSheet.ListObjects.Add(1, $tableRange)
     $table.Name = "Tabelle1"
 
-    # 📌 Formatierungen setzen
+    # Formatierungen setzen
     $newSheet.Columns.Item(1).Font.Bold = $true
     $newSheet.Cells.WrapText = $false
 
-    # 🧑‍💻 Zellenformatierung für Spalten
+    # Zellenformatierung für Spalten
     # 1. Spalte (Spalte A) zentrieren
     $newSheet.Columns.Item(1).HorizontalAlignment = -4108  # -4108 entspricht der Zentrierung
 
@@ -155,7 +155,7 @@ foreach ($file in $files) {
     $newSheet.Columns.Item(2).HorizontalAlignment = -4131  # -4131 entspricht der linken Ausrichtung
     $newSheet.Columns.Item(3).HorizontalAlignment = -4131  # -4131 entspricht der linken Ausrichtung
 
-    # 🏁 Original-Workbook schließen
+    # Original-Workbook schließen
     if ($workbook -ne $null) {
         try { $workbook.Close($false) } catch {}
         [System.Runtime.Interopservices.Marshal]::ReleaseComObject($workbook) | Out-Null
@@ -165,11 +165,11 @@ foreach ($file in $files) {
 
 Write-Host ""
 
-# ❌ Leeres Standardblatt entfernen
+# Leeres Standardblatt entfernen
 $tabelle1 = $newWorkbook.Sheets | Where-Object { $_.Name -eq "Tabelle1" -and $_.UsedRange.Rows.Count -eq 1 }
 if ($tabelle1) { $tabelle1.Delete() }
 
-# 📊 Leere Zeilen und Zeilen löschen, bei denen nur Spalte 1 einen Wert hat und Spalte 2 und 3 leer sind
+# Leere Zeilen und Zeilen löschen, bei denen nur Spalte 1 einen Wert hat und Spalte 2 und 3 leer sind
 $rowIndexToDelete = @()
 
 for ($i = 1; $i -le $newSheet.UsedRange.Rows.Count; $i++) {
@@ -196,10 +196,10 @@ foreach ($index in $rowIndexToDelete) {
     $newSheet.Rows.Item($index).Delete() | Out-Null
 }
 
-# 💾 Neue Datei speichern
+# Neue Datei speichern
 $newWorkbook.SaveAs($newFilePath)
 
-# 🏁 Ressourcen bereinigen
+# Ressourcen bereinigen
 if ($newWorkbook -ne $null) {
     try { $newWorkbook.Close($true) } catch {}
     [System.Runtime.Interopservices.Marshal]::ReleaseComObject($newWorkbook) | Out-Null
