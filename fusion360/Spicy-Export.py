@@ -176,7 +176,7 @@ def run(context):
         fusion_folder, country_folders = create_folder_structure(base_path)
         
         # Definiere die Länder und Typen
-        countries = ["DEU", "ENG", "POL", "FRA", "ESP"]
+        countries = ["DEU", "ENG", "FRA", "POL", "ESP"]
         types = ["A", "B", "C", "D", "E"]
 
         export_summary = ["Gewuerze"]  # Start der Baumstruktur
