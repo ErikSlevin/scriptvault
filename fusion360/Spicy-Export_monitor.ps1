@@ -41,6 +41,7 @@ $onCreated = Register-ObjectEvent $watcher 'Created' -Action {
     }
 }
 
+
 # Warten auf Ereignisse
 Write-Host "Überwachung gestartet. Drücke [Strg+C] zum Beenden."
 

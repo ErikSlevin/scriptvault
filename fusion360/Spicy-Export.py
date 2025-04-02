@@ -157,6 +157,45 @@ def export_f3d(fusion_folder, comment):
     
     return fusion_file_name
 
+def request_user_inputs():
+    """
+    Fordert den Benutzer nacheinander zur Eingabe von Kommentaren für die Länder
+    DEU, ENG, FRA, POL und ESP auf. Jedes Eingabefeld erscheint in einem eigenen Fenster.
+    """
+    ui = get_active_app().userInterface
+    countries = ["DEU", "ENG", "FRA", "POL", "ESP"]
+    user_inputs = []
+
+    for country in countries:
+        prompt = f"Bitte gib den Kommentar für {country} ein:"   # Eingabeaufforderung
+        title = f"Kommentar für {country} eingeben"               # Fenstertitel
+        (user_input, cancelled) = ui.inputBox(prompt, title, "")
+        if cancelled:
+            return None
+        user_inputs.append(user_input)
+    
+    return user_inputs
+
+def update_user_comments(user_inputs):
+    """
+    Aktualisiert die Kommentare der User-Parameter für die Länder
+    DEU, ENG, FRA, POL und ESP, indem die comment-Eigenschaft
+    der entsprechenden Parameter auf die Werte aus den Eingabefeldern gesetzt wird.
+    """
+    # Hole das aktive Design und die zugehörigen User-Parameter
+    design = get_active_design()
+    user_params = design.userParameters
+    
+    countries = ["DEU", "ENG", "FRA", "POL", "ESP"]
+    
+    # Iteriere über jedes Land und setze den Kommentar des entsprechenden Parameters
+    for i, country in enumerate(countries):
+        param = user_params.itemByName(country)  # Hole den Parameter für das Land
+        
+        if param:
+            # Setze den Kommentar des Parameters auf den Wert aus dem Inputfeld
+            param.comment = user_inputs[i]
+
 def run(context):
     """
     Hauptfunktion, die den gesamten Exportprozess steuert:
@@ -230,6 +269,14 @@ def run(context):
             # Bewege einen Schritt zurück in der Timeline
             returnValue = timeline_var.moveToPreviousStep()
             log_status(f"Timeline Schritt {i+1} zurückgesetzt, Rückgabewert: {returnValue}")
+
+
+         # Fordere den Benutzer zur Eingabe von Kommentaren auf
+        user_inputs = request_user_inputs()
+        if not user_inputs:
+            return
+        update_user_comments(user_inputs)
+
 
     except Exception as e:
         # Bei Fehlern wird eine Fehlermeldung angezeigt
