@@ -41,10 +41,20 @@ $onCreated = Register-ObjectEvent $watcher 'Created' -Action {
         # Hole die aktuelle Uhrzeit im Format [hh:mm:ss]
         $currentTime = (Get-Date).ToString("HH:mm:ss")
         
+        # Erstelle den Log-Pfad
+        $logFilePath = "$folderPath\00_LogFile\logfile.txt"
+        
+        # Erstelle das Log-Verzeichnis, falls es nicht existiert
+        if (-not (Test-Path "$folderPath\00_LogFile")) {
+            New-Item -ItemType Directory -Path "$folderPath\00_LogFile" | Out-Null
+        }
+
         # Prüfen, ob die Datei mit der Endung .f3d erstellt wurde
         if ($relativePath -like "*.f3d") {
             Write-Host -NoNewline ("[$currentTime]") -ForegroundColor Green
-            Write-Host " Neue Fusion 360 Datei erstellt: $relativePath"
+            Write-Host " -------------------------------------------------------------------------------------" -ForegroundColor Green
+            Write-Host -NoNewline ("[$currentTime]") -ForegroundColor Green
+            Write-Host " Neue Fusion 360 Datei erstellt: $relativePath" -ForegroundColor Green
             Write-Host -NoNewline ("[$currentTime]") -ForegroundColor Green
             Write-Host " -------------------------------------------------------------------------------------" -ForegroundColor Green
         } else {
@@ -52,6 +62,10 @@ $onCreated = Register-ObjectEvent $watcher 'Created' -Action {
             Write-Host -NoNewline ("[$currentTime]") -ForegroundColor Green
             Write-Host " Neue Datei erstellt: $relativePath"
         }
+        
+        # Logeintrag in die Logdatei schreiben
+        $logMessage = "[$currentTime] Neue Datei erstellt: $relativePath"
+        $logMessage | Out-File -Append -FilePath $logFilePath
     }
 }
 
