@@ -32,14 +32,20 @@ def get_active_design():
 def select_folder():
     """
     Öffnet einen Dialog zur Ordnerauswahl und setzt den Desktop als Standardverzeichnis.
+    Wenn der Ordner 'Gewuerze' bereits existiert, wird dieser direkt zurückgegeben.
     Gibt den ausgewählten Ordnerpfad zurück oder None, wenn kein Ordner ausgewählt wurde.
     """
     ui = get_active_app().userInterface
+    desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+    gewuerze_folder_path = os.path.join(desktop_path, "Gewuerze")
+    
+    # Überprüfen, ob der Ordner "Gewuerze" bereits existiert
+    if os.path.isdir(gewuerze_folder_path):
+        return gewuerze_folder_path
+    
+    # Wenn der Ordner nicht existiert, Dialog öffnen
     dlg = ui.createFolderDialog()
     dlg.title = "Wähle das Zielverzeichnis"
-    
-    # Standardordner: Desktop des Benutzers
-    desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
     dlg.initialDirectory = desktop_path
     
     if dlg.showDialog() == adsk.core.DialogResults.DialogOK:
@@ -276,6 +282,8 @@ def run(context):
         if not user_inputs:
             return
         update_user_comments(user_inputs)
+
+        get_active_app().userInterface.messageBox(f"Parameter aktualisieren!\n\nVolumenkörper >> ändern >> Parameter ändern öffnen und danach schließen und Schrittweise die timeline aktualisieren")
 
 
     except Exception as e:

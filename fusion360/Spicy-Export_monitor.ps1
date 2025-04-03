@@ -1,3 +1,5 @@
+Clear-Host
+
 # Pfad des zu überwachenden Ordners
 $folderPath = "C:\Users\erikw\Desktop\Gewuerze"
 
@@ -8,8 +10,12 @@ function Test-FolderExists {
 
 # Überprüfe, ob der Ordner existiert, wenn nicht, warte 0,1 Sekunden und versuche es erneut
 while (-not (Test-FolderExists)) {
-    Write-Host "Ordner existiert nicht oder ist nicht erreichbar. Überprüfe erneut..."
-    Start-Sleep -Seconds 0.3
+    # Hole die aktuelle Uhrzeit im Format [hh:mm:ss]
+    $currentTime = (Get-Date).ToString("HH:mm:ss")
+    Write-Host -NoNewline ("[$currentTime]") -ForegroundColor Green
+    Write-Host " Ordner existiert nicht oder ist nicht erreichbar. Überprüfe erneut..."
+    Start-Sleep -Seconds 0.6
+    Clear-Host
 }
 
 # Erstelle einen FileSystemWatcher, um den Ordner rekursiv zu überwachen
@@ -35,12 +41,19 @@ $onCreated = Register-ObjectEvent $watcher 'Created' -Action {
         # Hole die aktuelle Uhrzeit im Format [hh:mm:ss]
         $currentTime = (Get-Date).ToString("HH:mm:ss")
         
-        # Ausgabe der Uhrzeit in Grün und den restlichen Text in Standardfarbe
-        Write-Host -NoNewline ("[$currentTime]") -ForegroundColor Green
-        Write-Host " Neue Datei erstellt: $relativePath"
+        # Prüfen, ob die Datei mit der Endung .f3d erstellt wurde
+        if ($relativePath -like "*.f3d") {
+            Write-Host -NoNewline ("[$currentTime]") -ForegroundColor Green
+            Write-Host " Neue Fusion 360 Datei erstellt: $relativePath"
+            Write-Host -NoNewline ("[$currentTime]") -ForegroundColor Green
+            Write-Host " -------------------------------------------------------------------------------------" -ForegroundColor Green
+        } else {
+            # Ausgabe der Uhrzeit in Grün und den restlichen Text in Standardfarbe
+            Write-Host -NoNewline ("[$currentTime]") -ForegroundColor Green
+            Write-Host " Neue Datei erstellt: $relativePath"
+        }
     }
 }
-
 
 # Warten auf Ereignisse
 Write-Host "Überwachung gestartet. Drücke [Strg+C] zum Beenden."
@@ -48,7 +61,7 @@ Write-Host "Überwachung gestartet. Drücke [Strg+C] zum Beenden."
 try {
     # Endlosschleife, um auf Ereignisse zu warten
     while ($true) {
-        Start-Sleep -Seconds 0.1
+        Start-Sleep -Seconds 0.4
     }
 } catch {
     # Wenn der Benutzer Strg+C drückt, wird hier die Ausnahme abgefangen
