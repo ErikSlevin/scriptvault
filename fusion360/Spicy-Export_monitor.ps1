@@ -1,11 +1,24 @@
 Clear-Host
 
-# Pfad des zu überwachenden Ordners
-$folderPath = "C:\Users\erikw\Desktop\Gewuerze"
+# Desktoppfad über .NET ermitteln (nutzerunabhängig, kompatibel)
+$desktopPath = [Environment]::GetFolderPath("Desktop")
+
+# Zielordner definieren – hier ein Unterordner "Gewuerze" auf dem Desktop
+$folderPath = Join-Path -Path $desktopPath -ChildPath "Gewuerze"
+
+# Optional: Ausgabe zur Kontrolle
+Write-Host "Überwachter Ordner: $folderPath"
 
 # Funktion zum Überprüfen, ob der Ordner existiert
 function Test-FolderExists {
     return Test-Path $folderPath
+}
+
+# Beispielhafte Verwendung der Funktion
+if (Test-FolderExists) {
+    Write-Host "Ordner existiert." -ForegroundColor Green
+} else {
+    Write-Host "Ordner existiert NICHT!" -ForegroundColor Red
 }
 
 # Überprüfe, ob der Ordner existiert, wenn nicht, warte 0,1 Sekunden und versuche es erneut

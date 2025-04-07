@@ -29,47 +29,40 @@ def get_active_design():
     app = get_active_app()
     return adsk.fusion.Design.cast(app.activeProduct)
 
-def select_folder():
+def get_gewuerze_folder():
     """
-    Öffnet einen Dialog zur Ordnerauswahl und setzt den Desktop als Standardverzeichnis.
-    Wenn der Ordner 'Gewuerze' bereits existiert, wird dieser direkt zurückgegeben.
-    Gibt den ausgewählten Ordnerpfad zurück oder None, wenn kein Ordner ausgewählt wurde.
+    Gibt den Pfad zum Desktop-Ordner 'Gewuerze' des aktuellen Benutzers zurück.
+    Erstellt den Ordner, falls er nicht existiert.
     """
-    ui = get_active_app().userInterface
+    # Pfad zum Desktop ermitteln
     desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
-    gewuerze_folder_path = os.path.join(desktop_path, "Gewuerze")
-    
-    # Überprüfen, ob der Ordner "Gewuerze" bereits existiert
-    if os.path.isdir(gewuerze_folder_path):
-        return gewuerze_folder_path
-    
-    # Wenn der Ordner nicht existiert, Dialog öffnen
-    dlg = ui.createFolderDialog()
-    dlg.title = "Wähle das Zielverzeichnis"
-    dlg.initialDirectory = desktop_path
-    
-    if dlg.showDialog() == adsk.core.DialogResults.DialogOK:
-        return dlg.folder
-    return None
 
-def create_folder_structure(base_path):
+    # Zielordner: 'Gewuerze'
+    gewuerze_path = os.path.join(desktop_path, "Gewuerze")
+
+    # Ordner bei Bedarf erstellen
+    os.makedirs(gewuerze_path, exist_ok=True)
+
+    return gewuerze_path
+
+def create_folder_structure(desktop_path):
     """
-    Erstellt die Ordnerstruktur für den Export:
-      - Root-Ordner "Gewuerze" mit Unterordnern für Fusion-Dateien und Länderkategorien.
-      - Innerhalb der Länderordner werden Unterordner für die einzelnen Typen (TYPE A bis TYPE E) mit den Exportformaten "stl" und "3mf" angelegt.
+    Erstellt die Ordnerstruktur unterhalb von:
+    <Desktop>\Gewuerze\...
+
     Gibt den Pfad zum Fusion-Dateienordner sowie das Dictionary mit den Länderordnern zurück.
     """
     log_status("Erstelle Ordnerstruktur...")
-    
-    # Erstelle den Root-Ordner "Gewuerze"
-    root_path = os.path.join(base_path, "Gewuerze")
+
+    # Gewuerze-Root unterhalb des Desktop-Pfads
+    root_path = os.path.join(desktop_path, "Gewuerze")
     os.makedirs(root_path, exist_ok=True)
-    
+
     # Ordner für Fusion-Dateien
     fusion_folder = os.path.join(root_path, "00_Fusion_Files")
     os.makedirs(fusion_folder, exist_ok=True)
 
-    # Mapping der Länder zu ihren entsprechenden Ordnernamen
+    # Mapping der Länderordner
     country_folders = {
         "DEU": "01_DEU",
         "ENG": "02_ENG",
@@ -78,10 +71,9 @@ def create_folder_structure(base_path):
         "ESP": "05_ESP"
     }
 
-    # Liste der Typ-Ordner
+    # Typ-Ordner (A bis E)
     type_folders = ["TYPE A", "TYPE B", "TYPE C", "TYPE D", "TYPE E"]
 
-    # Erstelle für jedes Land und jeden Typ die Unterordner "stl" und "3mf"
     for country, folder_name in country_folders.items():
         country_path = os.path.join(root_path, folder_name)
         os.makedirs(country_path, exist_ok=True)
@@ -90,6 +82,7 @@ def create_folder_structure(base_path):
             os.makedirs(os.path.join(country_path, folder, "3mf"), exist_ok=True)
 
     return fusion_folder, country_folders
+
 
 def get_comment(country):
     """
@@ -121,9 +114,11 @@ def export_body(body_name, export_path, file_format, comment):
     export_mgr = design.exportManager
     root_comp = design.rootComponent
 
-    # Suche den Körper anhand seines Namens mithilfe von next() für mehr Übersichtlichkeit
-    body = next((b for b in root_comp.bRepBodies if b.name == body_name), None)
+    # Stelle sicher, dass der Exportordner existiert
+    os.makedirs(export_path, exist_ok=True)
 
+    # Suche den Körper anhand seines Namens
+    body = next((b for b in root_comp.bRepBodies if b.name == body_name), None)
     if not body:
         return None
 
@@ -187,20 +182,25 @@ def update_user_comments(user_inputs):
     Aktualisiert die Kommentare der User-Parameter für die Länder
     DEU, ENG, FRA, POL und ESP, indem die comment-Eigenschaft
     der entsprechenden Parameter auf die Werte aus den Eingabefeldern gesetzt wird.
+    Vor dem Setzen wird jeder '\' in einen Zeilenumbruch umgewandelt.
+    
+    :param user_inputs: Liste von Strings mit den Kommentarwerten in Länderreihenfolge
     """
     # Hole das aktive Design und die zugehörigen User-Parameter
     design = get_active_design()
     user_params = design.userParameters
-    
+
+    # Liste der Länderkürzel in definierter Reihenfolge
     countries = ["DEU", "ENG", "FRA", "POL", "ESP"]
-    
+
     # Iteriere über jedes Land und setze den Kommentar des entsprechenden Parameters
     for i, country in enumerate(countries):
         param = user_params.itemByName(country)  # Hole den Parameter für das Land
-        
+
         if param:
-            # Setze den Kommentar des Parameters auf den Wert aus dem Inputfeld
-            param.comment = user_inputs[i]
+            # Ersetze '\' durch Zeilenumbruch und setze den Kommentar
+            cleaned_comment = user_inputs[i].replace("\\", "\n")
+            param.comment = cleaned_comment
 
 def run(context):
     """
@@ -213,12 +213,10 @@ def run(context):
     """
     try:
         # Ordner auswählen
-        base_path = select_folder()
-        if not base_path:
-            return
+        desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
 
         # Erstelle Ordnerstruktur und hole Mapping der Länderordner
-        fusion_folder, country_folders = create_folder_structure(base_path)
+        fusion_folder, country_folders = create_folder_structure(desktop_path)
         
         # Definiere die Länder und Typen
         countries = ["DEU", "ENG", "FRA", "POL", "ESP"]
@@ -243,8 +241,8 @@ def run(context):
                 log_status(f"-> Exportiere {body_name} (STL & 3MF)...")
 
                 # Erstelle den vollständigen Pfad für die jeweiligen Formate
-                stl_path = os.path.join(base_path, "Gewuerze", country_folders[country], type_folder, "stl")
-                mf3_path = os.path.join(base_path, "Gewuerze", country_folders[country], type_folder, "3mf")
+                stl_path = os.path.join(desktop_path, "Gewuerze", country_folders[country], type_folder, "stl")
+                mf3_path = os.path.join(desktop_path, "Gewuerze", country_folders[country], type_folder, "3mf")
                 
                 stl_file = export_body(body_name, stl_path, "stl", comment)
                 three_mf_file = export_body(body_name, mf3_path, "3mf", comment)
