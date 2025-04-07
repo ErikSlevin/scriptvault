@@ -67,8 +67,9 @@ def create_folder_structure(desktop_path):
         "DEU": "01_DEU",
         "ENG": "02_ENG",
         "FRA": "03_FRA",
-        "POL": "04_POL",
-        "ESP": "05_ESP"
+        "POR": "04_POR",
+        "ESP": "05_ESP",
+        "POL": "06_POL"
     }
 
     # Typ-Ordner (A bis E)
@@ -164,7 +165,7 @@ def request_user_inputs():
     DEU, ENG, FRA, POL und ESP auf. Jedes Eingabefeld erscheint in einem eigenen Fenster.
     """
     ui = get_active_app().userInterface
-    countries = ["DEU", "ENG", "FRA", "POL", "ESP"]
+    countries = ["DEU", "ENG", "FRA", "POR", "ESP", "POL"]
     user_inputs = []
 
     for country in countries:
@@ -191,7 +192,7 @@ def update_user_comments(user_inputs):
     user_params = design.userParameters
 
     # Liste der Länderkürzel in definierter Reihenfolge
-    countries = ["DEU", "ENG", "FRA", "POL", "ESP"]
+    countries = ["DEU", "ENG", "FRA", "POR", "ESP", "POL"]
 
     # Iteriere über jedes Land und setze den Kommentar des entsprechenden Parameters
     for i, country in enumerate(countries):
@@ -219,7 +220,7 @@ def run(context):
         fusion_folder, country_folders = create_folder_structure(desktop_path)
         
         # Definiere die Länder und Typen
-        countries = ["DEU", "ENG", "FRA", "POL", "ESP"]
+        countries = ["DEU", "ENG", "FRA", "POR", "ESP", "POL"]
         types = ["A", "B", "C", "D", "E"]
 
         export_summary = ["Gewuerze"]  # Start der Baumstruktur
