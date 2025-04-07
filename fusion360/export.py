@@ -149,7 +149,7 @@ def export_f3d(fusion_folder, comment):
     design = get_active_design()
     export_mgr = design.exportManager
     
-    fusion_file_name = f"DEU.{comment}-multi.f3d"
+    fusion_file_name = f"{comment}-multi.f3d"
     fusion_file_path = os.path.join(fusion_folder, fusion_file_name)
     
     # Erstelle Exportoptionen für das Fusion Archive
