@@ -12,13 +12,75 @@ char_mapping = {
     'Ć': 'C', 'ć': 'c', 'Ń': 'N', 'ń': 'n'
 }
 
+# Liste von Gewürzen mit Übersetzungen in verschiedenen Sprachen
+# Sprachen: Deutsch (DEU), Englisch (ENG), Französisch (FRA), Portugiesisch (POR), Spanisch (ESP), Polnisch (POL)
+
+spices = [
+    {'DEU': 'Anis', 'ENG': 'Anise', 'FRA': 'Anis', 'POR': 'Anis', 'ESP': 'Anís', 'POL': 'Anyż'},
+    {'DEU': 'Bärlauch', 'ENG': 'Wild garlic', 'FRA': 'Ail des ours', 'POR': 'Alho selvagem', 'ESP': 'Ajo silvestre', 'POL': 'Czosnek niedźwiedzi'},
+    {'DEU': 'Basilikum', 'ENG': 'Basil', 'FRA': 'Basilic', 'POR': 'Manjericão', 'ESP': 'Albahaca', 'POL': 'Bazylia'},
+    {'DEU': 'Bohnenkraut', 'ENG': 'Savory', 'FRA': 'Sarriette', 'POR': 'Segurelha', 'ESP': 'Ajedrea', 'POL': 'Cząber'},
+    {'DEU': 'Cayenne Pfeffer', 'ENG': 'Cayenne pepper', 'FRA': 'Poivre de Cayenne', 'POR': 'Pimenta caiena', 'ESP': 'Pimienta de Cayena', 'POL': 'Pieprz cayenne'},
+    {'DEU': 'Chili', 'ENG': 'Chili', 'FRA': 'Piment', 'POR': 'Chili', 'ESP': 'Chile', 'POL': 'Chili'},
+    {'DEU': 'Chili Fäden', 'ENG': 'Chili threads', 'FRA': 'Filaments de piment', 'POR': 'Fios de chili', 'ESP': 'Hilos de chile', 'POL': 'Nitki chili'},
+    {'DEU': 'Chili ganz', 'ENG': 'Whole chili', 'FRA': 'Piment entier', 'POR': 'Chili inteiro', 'ESP': 'Chile entero', 'POL': 'Chili w całości'},
+    {'DEU': 'Chili gemahlen', 'ENG': 'Ground chili', 'FRA': 'Piment moulu', 'POR': 'Chili moído', 'ESP': 'Chile molido', 'POL': 'Chili mielone'},
+    {'DEU': 'Curry', 'ENG': 'Curry', 'FRA': 'Curry', 'POR': 'Curry', 'ESP': 'Curry', 'POL': 'Curry'},
+    {'DEU': 'Curry mild', 'ENG': 'Mild curry', 'FRA': 'Curry doux', 'POR': 'Curry suave', 'ESP': 'Curry suave', 'POL': 'Curry łagodne'},
+    {'DEU': 'Curry scharf', 'ENG': 'Spicy curry', 'FRA': 'Curry épicé', 'POR': 'Curry picante', 'ESP': 'Curry picante', 'POL': 'Curry ostre'},
+    {'DEU': 'Dill', 'ENG': 'Dill', 'FRA': 'Aneth', 'POR': 'Endro', 'ESP': 'Eneldo', 'POL': 'Koper'},
+    {'DEU': 'Estragon', 'ENG': 'Tarragon', 'FRA': 'Estragon', 'POR': 'Estragão', 'ESP': 'Estragón', 'POL': 'Estragon'},
+    {'DEU': 'Fenchel', 'ENG': 'Fennel', 'FRA': 'Fenouil', 'POR': 'Funcho', 'ESP': 'Hinojo', 'POL': 'Koper włoski'},
+    {'DEU': 'Garam Masala', 'ENG': 'Garam Masala', 'FRA': 'Garam Masala', 'POR': 'Garam Masala', 'ESP': 'Garam Masala', 'POL': 'Garam masala'},
+    {'DEU': 'Gyros', 'ENG': 'Gyros spice mix', 'FRA': 'Épices pour gyros', 'POR': 'Tempero para gyros', 'ESP': 'Especia para gyros', 'POL': 'Przyprawa do gyrosa'},
+    {'DEU': 'Harissa', 'ENG': 'Harissa', 'FRA': 'Harissa', 'POR': 'Harissa', 'ESP': 'Harissa', 'POL': 'Harissa'},
+    {'DEU': 'Ingwer', 'ENG': 'Ginger', 'FRA': 'Gingembre', 'POR': 'Gengibre', 'ESP': 'Jengibre', 'POL': 'Imbir'},
+    {'DEU': 'Kardamon', 'ENG': 'Cardamom', 'FRA': 'Cardamome', 'POR': 'Cardamomo', 'ESP': 'Cardamomo', 'POL': 'Kardamon'},
+    {'DEU': 'Knoblauch', 'ENG': 'Garlic', 'FRA': 'Ail', 'POR': 'Alho', 'ESP': 'Ajo', 'POL': 'Czosnek'},
+    {'DEU': 'Koriander', 'ENG': 'Coriander', 'FRA': 'Coriandre', 'POR': 'Coentro', 'ESP': 'Cilantro', 'POL': 'Kolendra'},
+    {'DEU': 'Kräuter der Provence', 'ENG': 'Herbs of Provence', 'FRA': 'Herbes de Provence', 'POR': 'Ervas de Provence', 'ESP': 'Hierbas de Provenza', 'POL': 'Zioła prowansalskie'},
+    {'DEU': 'Kreuzkümmel', 'ENG': 'Cumin', 'FRA': 'Cumin', 'POR': 'Cominho', 'ESP': 'Comino', 'POL': 'Kmin rzymski'},
+    {'DEU': 'Kümmel', 'ENG': 'Caraway', 'FRA': 'Carvi', 'POR': 'Alcaravia', 'ESP': 'Alcaravea', 'POL': 'Kminek'},
+    {'DEU': 'Kurkuma', 'ENG': 'Turmeric', 'FRA': 'Curcuma', 'POR': 'Açafrão da Terra', 'ESP': 'Cúrcuma', 'POL': 'Kurkuma'},
+    {'DEU': 'Lorbeer Blätter', 'ENG': 'Bay leaves', 'FRA': 'Feuilles de laurier', 'POR': 'Folhas de louro', 'ESP': 'Hojas de laurel', 'POL': 'Liście laurowe'},
+    {'DEU': 'Majoran', 'ENG': 'Marjoram', 'FRA': 'Marjolaine', 'POR': 'Manjerona', 'ESP': 'Mejorana', 'POL': 'Majeranek'},
+    {'DEU': 'Meersalz', 'ENG': 'Sea salt', 'FRA': 'Sel marin', 'POR': 'Sal marinho', 'ESP': 'Sal marina', 'POL': 'Sól morska'},
+    {'DEU': 'Mehl', 'ENG': 'Flour', 'FRA': 'Farine', 'POR': 'Farinha', 'ESP': 'Harina', 'POL': 'Mąka'},
+    {'DEU': 'Minze', 'ENG': 'Mint', 'FRA': 'Menthe', 'POR': 'Hortelã', 'ESP': 'Menta', 'POL': 'Mięta'},
+    {'DEU': 'Muskat', 'ENG': 'Nutmeg', 'FRA': 'Noix de muscade', 'POR': 'Noz-moscada', 'ESP': 'Nuez moscada', 'POL': 'Gałka muszkatołowa'},
+    {'DEU': 'Nelken', 'ENG': 'Cloves', 'FRA': 'Clous de girofle', 'POR': 'Cravo-da-índia', 'ESP': 'Clavos de olor', 'POL': 'Goździki'},
+    {'DEU': 'Oregano', 'ENG': 'Oregano', 'FRA': 'Origan', 'POR': 'Orégano', 'ESP': 'Orégano', 'POL': 'Oregano'},
+    {'DEU': 'Paprika', 'ENG': 'Paprika', 'FRA': 'Paprika', 'POR': 'Páprica', 'ESP': 'Pimentón', 'POL': 'Papryka'},
+    {'DEU': 'Paprika edelsüß', 'ENG': 'Sweet paprika', 'FRA': 'Paprika doux', 'POR': 'Páprica doce', 'ESP': 'Pimentón dulce', 'POL': 'Papryka słodka'},
+    {'DEU': 'Paprika geräuchert', 'ENG': 'Smoked paprika', 'FRA': 'Paprika fumé', 'POR': 'Páprica defumada', 'ESP': 'Pimentón ahumado', 'POL': 'Papryka wędzona'},
+    {'DEU': 'Paprika rosenscharf', 'ENG': 'Hot paprika', 'FRA': 'Paprika fort', 'POR': 'Páprica picante', 'ESP': 'Pimentón picante', 'POL': 'Papryka ostra'},
+    {'DEU': 'Petersilie', 'ENG': 'Parsley', 'FRA': 'Persil', 'POR': 'Salsa', 'ESP': 'Perejil', 'POL': 'Pietruszka'},
+    {'DEU': 'Pfeffer', 'ENG': 'Pepper', 'FRA': 'Poivre', 'POR': 'Pimenta', 'ESP': 'Pimienta', 'POL': 'Pieprz'},
+    {'DEU': 'Pfeffer bunt', 'ENG': 'Mixed peppercorns', 'FRA': 'Mélange de poivres', 'POR': 'Pimenta variada', 'ESP': 'Pimienta variada', 'POL': 'Pieprz kolorowy'},
+    {'DEU': 'Pfeffer ganz', 'ENG': 'Whole pepper', 'FRA': 'Poivre en grains', 'POR': 'Pimenta em grãos', 'ESP': 'Pimienta en grano', 'POL': 'Pieprz w ziarnach'},
+    {'DEU': 'Pfeffer gemahlen', 'ENG': 'Ground pepper', 'FRA': 'Poivre moulu', 'POR': 'Pimenta moída', 'ESP': 'Pimienta molida', 'POL': 'Pieprz mielony'},
+    {'DEU': 'Pfeffer grün', 'ENG': 'Green pepper', 'FRA': 'Poivre vert', 'POR': 'Pimenta verde', 'ESP': 'Pimienta verde', 'POL': 'Pieprz zielony'},
+    {'DEU': 'Pfeffer schwarz', 'ENG': 'Black pepper', 'FRA': 'Poivre noir', 'POR': 'Pimenta preta', 'ESP': 'Pimienta negra', 'POL': 'Pieprz czarny'},
+    {'DEU': 'Pfeffer weiß', 'ENG': 'White pepper', 'FRA': 'Poivre blanc', 'POR': 'Pimenta branca', 'ESP': 'Pimienta blanca', 'POL': 'Pieprz biały'},
+    {'DEU': 'Piment', 'ENG': 'Allspice', 'FRA': 'Piment de la Jamaïque', 'POR': 'Pimenta da Jamaica', 'ESP': 'Pimienta de Jamaica', 'POL': 'Ziele angielskie'},
+    {'DEU': 'Pommes Frites', 'ENG': 'French fries', 'FRA': 'Frites', 'POR': 'Batatas fritas', 'ESP': 'Papas fritas', 'POL': 'Przyprawa do frytek'},
+    {'DEU': 'Rosmarin', 'ENG': 'Rosemary', 'FRA': 'Romarin', 'POR': 'Alecrim', 'ESP': 'Romero', 'POL': 'Rozmaryn'},
+    {'DEU': 'Safran', 'ENG': 'Saffron', 'FRA': 'Safran', 'POR': 'Açafrão', 'ESP': 'Azafrán', 'POL': 'Szafran'},
+    {'DEU': 'Salbei', 'ENG': 'Sage', 'FRA': 'Sauge', 'POR': 'Sálvia', 'ESP': 'Salvia', 'POL': 'Szałwia'},
+    {'DEU': 'Salz', 'ENG': 'Salt', 'FRA': 'Sel', 'POR': 'Sal', 'ESP': 'Sal', 'POL': 'Sól'},
+    {'DEU': 'Schnittlauch', 'ENG': 'Chives', 'FRA': 'Ciboulette', 'POR': 'Cebolinha', 'ESP': 'Cebollino', 'POL': 'Szczypiorek'},
+    {'DEU': 'Sellerie', 'ENG': 'Celery', 'FRA': 'Céleri', 'POR': 'Aipo', 'ESP': 'Apio', 'POL': 'Seler'},
+    {'DEU': 'Sesam', 'ENG': 'Sesame', 'FRA': 'Sésame', 'POR': 'Gergelim', 'ESP': 'Sésamo', 'POL': 'Sezam'},
+    {'DEU': 'Thymian', 'ENG': 'Thyme', 'FRA': 'Thym', 'POR': 'Tomilho', 'ESP': 'Tomillo', 'POL': 'Tymianek'},
+    {'DEU': 'Vanille', 'ENG': 'Vanilla', 'FRA': 'Vanille', 'POR': 'Baunilha', 'ESP': 'Vainilla', 'POL': 'Wanilia'},
+    {'DEU': 'Zimt', 'ENG': 'Cinnamon', 'FRA': 'Cannelle', 'POR': 'Canela', 'ESP': 'Canela', 'POL': 'Cynamon'},
+    {'DEU': 'Zucker', 'ENG': 'Sugar', 'FRA': 'Sucre', 'POR': 'Açúcar', 'ESP': 'Azúcar', 'POL': 'Cukier'},
+    {'DEU': 'Zwiebel', 'ENG': 'Onion', 'FRA': 'Oignon', 'POR': 'Cebola', 'ESP': 'Cebolla', 'POL': 'Cebula'},
+]
+
 # Funktion, um Zeichen entsprechend der Mapping-Tabelle zu ersetzen
 def replace_special_chars(text):
     return ''.join(char_mapping.get(c, c) for c in text)
-
-def log_status(message):
-    """ Gibt eine Statusmeldung in der Konsole aus. """
-    print(f"[INFO] {message}")
 
 def get_active_app():
     """ Gibt die aktive Application-Instanz zurück. """
@@ -52,7 +114,6 @@ def create_folder_structure(desktop_path):
 
     Gibt den Pfad zum Fusion-Dateienordner sowie das Dictionary mit den Länderordnern zurück.
     """
-    log_status("Erstelle Ordnerstruktur...")
 
     # Gewuerze-Root unterhalb des Desktop-Pfads
     root_path = os.path.join(desktop_path, "Gewuerze")
@@ -146,7 +207,7 @@ def export_f3d(fusion_folder, comment):
     Der Dateiname wird aus "DEU", dem Kommentar und dem Suffix "-multi" generiert.
     Gibt den Dateinamen der Fusion-Datei zurück.
     """
-    log_status("Speichere Fusion-Datei...")
+
     design = get_active_design()
     export_mgr = design.exportManager
     
@@ -161,21 +222,29 @@ def export_f3d(fusion_folder, comment):
 
 def request_user_inputs():
     """
-    Fordert den Benutzer nacheinander zur Eingabe von Kommentaren für die Länder
-    DEU, ENG, FRA, POL und ESP auf. Jedes Eingabefeld erscheint in einem eigenen Fenster.
+    Fordert den Benutzer zur Eingabe eines deutschen Begriffs auf.
+    Sucht dann die zugehörigen Übersetzungen im spices-Array und gibt diese zurück.
     """
     ui = get_active_app().userInterface
-    countries = ["DEU", "ENG", "FRA", "POR", "ESP", "POL"]
-    user_inputs = []
 
-    for country in countries:
-        prompt = f"Bitte gib den Kommentar für {country} ein:"   # Eingabeaufforderung
-        title = f"Kommentar für {country} eingeben"               # Fenstertitel
-        (user_input, cancelled) = ui.inputBox(prompt, title, "")
-        if cancelled:
-            return None
-        user_inputs.append(user_input)
+    # Eingabefeld für den deutschen Begriff
+    prompt = "Bitte gib den deutschen Gewürzbegriff ein:"
+    title = "Gewürzeingabe (DEU)"
+    (user_input, cancelled) = ui.inputBox(prompt, title, "")
+    if cancelled:
+        return None
     
+    # Suchen des Begriffs im Array
+    matching_entry = next((item for item in spices if item["DEU"].lower() == user_input.strip().lower()), None)
+
+    if not matching_entry:
+        ui.messageBox(f"Der Begriff '{user_input}' wurde nicht im Gewürz-Array gefunden.")
+        return None
+
+    # Extrahiere die Übersetzungen in der gewünschten Reihenfolge
+    countries = ["DEU", "ENG", "FRA", "POR", "ESP", "POL"]
+    user_inputs = [matching_entry[country] for country in countries]
+
     return user_inputs
 
 def update_user_comments(user_inputs):
@@ -221,25 +290,16 @@ def run(context):
         
         # Definiere die Länder und Typen
         countries = ["DEU", "ENG", "FRA", "POR", "ESP", "POL"]
-        types = ["A", "B", "C", "D", "E"]
-
-        export_summary = ["Gewuerze"]  # Start der Baumstruktur
-        log_status("Starte Exportprozess...")
+        types = ["A", "B", "C", "D", "E", "F", "G", "H"]
 
         # Iteriere über die Länder
         for country in countries:
             comment = get_comment(country)
-            log_status(f"Starte Export für {country}...")
-
-            # Landesspezifische Zusammenfassung
-            country_summary = f"├── {country} ({comment})"
 
             # Iteriere über die Typen und exportiere die Körper
             for t in types:
                 body_name = f"{country}-{t}"
                 type_folder = f"TYPE {t}"
-
-                log_status(f"-> Exportiere {body_name} (STL & 3MF)...")
 
                 # Erstelle den vollständigen Pfad für die jeweiligen Formate
                 stl_path = os.path.join(desktop_path, "Gewuerze", country_folders[country], type_folder, "stl")
@@ -248,33 +308,16 @@ def run(context):
                 stl_file = export_body(body_name, stl_path, "stl", comment)
                 three_mf_file = export_body(body_name, mf3_path, "3mf", comment)
 
-                # Füge die exportierten Dateien zur Zusammenfassung hinzu
-                if t == 'E':
-                    country_summary += f"\n│   └── Type {t}: {comment} (.stl & .3mf)"
-                else:
-                    country_summary += f"\n│   ├── Type {t}: {comment} (.stl & .3mf)"
-
-            # Füge die Zusammenfassung für das aktuelle Land zur Gesamtstruktur hinzu
-            export_summary.append(country_summary)
-
         # Exportiere die Fusion-Datei mit dem Kommentar des Landes DEU
         comment = get_comment("DEU")
         fusion_file_name = export_f3d(fusion_folder, comment)
 
-        export_summary.append(f"└── Fusion File: {fusion_file_name}")
-
-        # Zeige eine strukturierte Zusammenfassung des gesamten Exportprozesses an
-        export_message = "\n".join(export_summary)
-        get_active_app().userInterface.messageBox(f"Export abgeschlossen!\n\n{export_message}")
-
         # Nach Abschluss: Bewege die Timeline 5 Schritte zurück
         design = get_active_design()
         timeline_var = design.timeline
-        for i in range(5):
+        for i in range(6):
             # Bewege einen Schritt zurück in der Timeline
             returnValue = timeline_var.moveToPreviousStep()
-            log_status(f"Timeline Schritt {i+1} zurückgesetzt, Rückgabewert: {returnValue}")
-
 
          # Fordere den Benutzer zur Eingabe von Kommentaren auf
         user_inputs = request_user_inputs()
