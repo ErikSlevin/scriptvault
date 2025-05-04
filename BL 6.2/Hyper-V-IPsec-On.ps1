@@ -21,9 +21,9 @@
     .\Set-VMIPsecOffload.ps1 -VMFilter "VM TEST*" -MaxSecurityAssociation 2
 
 .NOTES
-    Autor: [Dein Name]
-    Datum: [Aktuelles Datum]
-    Version: 1.0
+    Autor: ErikSlevin
+    Datum: 04.055.2025
+    Version: 0.1
 #>
 
 [CmdletBinding()]
