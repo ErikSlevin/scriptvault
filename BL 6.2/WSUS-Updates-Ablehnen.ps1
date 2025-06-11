@@ -1,13 +1,11 @@
 <#
 .SYNOPSIS
     WSUS Updates automatisch ablehnen basierend auf Produkte und Titel
-
 .DESCRIPTION
     Dieses PowerShell-Script verbindet sich mit einem WSUS-Server und 
     lehnt automatisch Updates ab, die für veraltete oder unerwünschte Produkte 
     bestimmt sind. Das Script überprüft die ProductTitles der Updates sowie
     den Titel und lehnt Updates ab, die bestimmte Begriffe enthalten.
-
 .PARAMETER WSUSServer
     Der FQDN oder die IP-Adresse des WSUS-Servers
     
@@ -22,7 +20,6 @@
     
 .PARAMETER LogPath
     Pfad zur Logdatei (Standard: D:\WSUS\WSUS-Cleanup.log)
-
 .NOTES
     Dateiname:    WSUS-Updates-Ablehnen.ps1
     Autor:        Erik Slevin
@@ -38,7 +35,6 @@
     .\WSUS-Updates-Ablehnen-Optimiert.ps1 -WSUSServer "wsus.domain.local" -WhatIf
     Simulation ohne tatsächliche Änderungen
 #>
-
 [CmdletBinding(SupportsShouldProcess)]
 param(
     [Parameter(Mandatory = $false)]
@@ -53,7 +49,6 @@ param(
     [Parameter(Mandatory = $false)]
     [string]$LogPath = "D:\WSUS\WSUS-Cleanup.log"
 )
-
 # Log-Verzeichnis erstellen falls nicht vorhanden
 $logDirectory = Split-Path -Path $LogPath -Parent
 if (-not (Test-Path -Path $logDirectory)) {
@@ -67,7 +62,6 @@ if (-not (Test-Path -Path $logDirectory)) {
         $LogPath = ".\WSUS-Cleanup.log"
     }
 }
-
 # Logging-Funktion
 function Write-Log {
     param(
@@ -97,10 +91,8 @@ function Write-Log {
         Write-Host "Warnung: Konnte nicht in Logdatei schreiben: $($_.Exception.Message)" -ForegroundColor Yellow
     }
 }
-
 # Konfiguration der abzulehnenden Produkte und Begriffe
 $declineConfig = @{
-
     # Veraltete Produkte
     Products = @(
         # Windows Server Versionen (End-of-Life)
@@ -116,7 +108,11 @@ $declineConfig = @{
         "Exchange Server 2013",           # Exchange 2013 (EOL: 2023)
         "Exchange Server 2016",           # Nicht verwendet
         "Exchange Server 2010",           # EOL
-        
+        "Exchange Server 2007",           # EOL
+        "Exchange Server 2000",           # EOL
+        "Microsoft Lync Server 2010",     # EOL
+        "Microsoft Lync Server 2013",     # EOL
+
         # Sonstige Server-Produkte
         "Business Server 2015",           # Small Business Server (EOL)
         "SharePoint Server 2016",         # Nicht verwendet
@@ -124,6 +120,8 @@ $declineConfig = @{
         "System Center",                  # Nicht verwendet
         
         # SQL Server Versionen (veraltet)
+        "SQL Server 2000",
+        "SQL Server 2005",                # SQL Server 2008 (EOL: 2019)
         "SQL Server 2008",                # SQL Server 2008 (EOL: 2019)
         "SQL Server 2012",                # SQL Server 2012 (EOL: 2022)
         "SQL Server 2014",                # SQL Server 2014 (EOL: 2024)
@@ -132,6 +130,9 @@ $declineConfig = @{
         "SQL Server 2019",                # Nicht verwendet
         
         # Office Versionen (End-of-Life) - Sie haben nur neuere
+        "Office XP",                      # EOL
+        "Office Communications Server 2007",
+        "Office Communicator Server 2007 R2",
         "Office 2003",                    # Office 2003 (EOL: 2014)
         "Office 2007",                    # Office 2007 (EOL: 2017)
         "Office 2010",                    # Office 2010 (EOL: 2020)
@@ -140,14 +141,24 @@ $declineConfig = @{
         "Microsoft Visio 2013",           # Nicht verwendet
         "Microsoft Project 2010",         # Nicht verwendet
         "Microsoft Project 2013",         # Nicht verwendet
+        "Microsoft Lync 2010",            # EOL
+        "Visual Studio 2005",             # EOL
+        "Visual Studio 2008",             # EOL
+        "Visual Studio 2010",             # EOL
+        "Visual Studio 2012",             # EOL
         
-        # Windows Client Versionen (End-of-Life) - Sie haben nur 10/11
+        # Windows Client Versionen (End-of-Life)
+        "Windows 2000",                   # Windows 2000 (EOL: 2008)
         "Windows Vista",                  # Windows Vista (EOL: 2017)
         "Windows XP",                     # Windows XP (EOL: 2014)
         "Windows 7",                      # Windows 7 (EOL: 2020)
         "Windows 8",                      # Windows 8/8.1 (EOL: 2023)
         "Windows RT",                     # Windows RT (EOL)
         "Windows Embedded"                # Nicht verwendet
+        "Forefront Identity Manager 2010 R2",
+        "Forefront Identity Manager 2010",
+        "Virtual PC",
+        "Virtual Server"
     )
     
     # Unerwünschte Update-Muster im Titel
@@ -199,7 +210,28 @@ $declineConfig = @{
         # Optionale Features die selten benötigt werden
         "Container",                      # Falls keine Container verwendet
         "WSL",                            # Windows Subsystem for Linux
-        "Subsystem for Linux"             # Windows Subsystem for Linux
+        "Subsystem for Linux",            # Windows Subsystem for Linux
+         
+        "Pokerspiel",
+        "Pokerspiel HoldEM",                     # 
+        "Tinker",
+        "SQL Server 2005",
+        "SQL Server 2008",
+        "Visio 2002",
+        "PowerPoint 2002",
+        "Office XP",
+        "Project 2002", 
+        "Visio 2002",
+        "Access 2002",
+        "Outlook 2002",
+        "Exchange 2000",
+        "Word 2002",
+        "Publisher 2002",
+        "Excel 2002",
+        "Windows 8.1",
+        "Taiwanese",
+        "Japanisch",
+        "DreamScene"              # 
     )
 }
 
@@ -270,16 +302,37 @@ function Start-WSUSCleanup {
             }
             
             # 4. Überprüfung: Titel-Muster (nur wenn noch nicht zum Ablehnen markiert)
-            if (-not $shouldDecline -and $update.Title) {
-                foreach ($pattern in $declineConfig.TitlePatterns) {
-                    if ($update.Title -match [regex]::Escape($pattern)) {
-                        $shouldDecline = $true
-                        $declineReason = "Unerwünschtes Muster: $pattern"
-                        break
+                if (-not $shouldDecline -and $update.Title) {
+                    # Spezielle Behandlung für Language Packs (alle Arten)
+                    if ($update.Title -match 'LanguageFeatureOnDemand' -or 
+                        $update.Title -match 'Language Pack' -or 
+                        $update.Title -match 'Language Interface Pack' -or
+                        $update.Title -match '_LP' -or 
+                        $update.Title -match '_LIP') {
+                        # Überprüfen ob es sich um de-DE oder en-US handelt
+                        if ($update.Title -notmatch '\[de-DE\]' -and $update.Title -notmatch '\[en-US\]') {
+                            $shouldDecline = $true
+                            $declineReason = "Language Pack: Unerwünschte Sprache (nur de-DE und en-US erlaubt)"
+                        }
+                    }
+                    # Normale Titel-Muster Überprüfung (Language Pack Muster ausschließen, da bereits oben behandelt)
+                    else {
+                        foreach ($pattern in $declineConfig.TitlePatterns) {
+                            # Language Pack Muster überspringen, da bereits oben behandelt
+                            if ($pattern -in @('_LP', '_LIP', 'Language Interface Pack', 'Language Pack')) {
+                                continue
+                            }
+                
+                            if ($update.Title -match [regex]::Escape($pattern)) {
+                                $shouldDecline = $true
+                                $declineReason = "Unerwünschtes Muster: $pattern"
+                                break
+                            }
+                        }
                     }
                 }
-            }
             
+
             # Update ablehnen
             if ($shouldDecline) {
                 if ($PSCmdlet.ShouldProcess($update.Title, "Update ablehnen")) {
@@ -287,7 +340,7 @@ function Start-WSUSCleanup {
                         $update.Decline()
                         $declinedCount++
                         Write-Log "Abgelehnt: $($update.Title)" "SUCCESS"
-                        Write-Log "  Grund: $declineReason" "INFO"
+                        Write-Log "    Grund: $declineReason" "INFO"
                     }
                     catch {
                         Write-Log "Fehler beim Ablehnen von '$($update.Title)': $($_.Exception.Message)" "ERROR"
@@ -314,7 +367,6 @@ function Start-WSUSCleanup {
         exit 1
     }
 }
-
 # Script ausführen
 try {
     Start-WSUSCleanup
