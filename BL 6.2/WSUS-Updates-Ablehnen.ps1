@@ -213,7 +213,7 @@ $declineConfig = @{
         "Subsystem for Linux",            # Windows Subsystem for Linux
          
         "Pokerspiel",
-        "Pokerspiel HoldEM",                     # 
+        'Pokerspiel "Hold Em"',                     # 
         "Tinker",
         "SQL Server 2005",
         "SQL Server 2008",
@@ -231,7 +231,8 @@ $declineConfig = @{
         "Windows 8.1",
         "Taiwanese",
         "Japanisch",
-        "DreamScene"              # 
+        "DreamScene",
+        "Koreanisch"              # 
     )
 }
 
