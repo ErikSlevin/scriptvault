@@ -159,6 +159,8 @@ $declineConfig = @{
         # "Office 2016",                          		# EOL: Okt 2025 (Mainstream Support Ende)
         # "Office 2019",                          		# EOL: Oktober 2025 (Langzeit)
         # "Office 2021",                          		# Aktuelle Version, LTS
+        "Office 365",                          			# Nicht verwendet
+        "Microsoft 365",                       			# Nicht verwendet
 
         #==============================#
         #      Publisher-Produkte      #
