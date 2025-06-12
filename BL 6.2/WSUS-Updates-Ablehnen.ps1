@@ -91,150 +91,248 @@ function Write-Log {
         Write-Host "Warnung: Konnte nicht in Logdatei schreiben: $($_.Exception.Message)" -ForegroundColor Yellow
     }
 }
+
 # Konfiguration der abzulehnenden Produkte und Begriffe
 $declineConfig = @{
     # Veraltete Produkte
     Products = @(
-        # Windows Server Versionen (End-of-Life)
-        "Server 2003",                    # Windows Server 2003 (EOL: 2015)
-        "Windows Server 2008",            # Windows Server 2008/2008 R2 (EOL: 2020)
-        "Windows Server 2012",            # Windows Server 2012/2012 R2 (EOL: 2023)
-        "Windows Server 2019",            # Nicht verwendet
-        "Windows Server 2022",            # Nicht verwendet
-        "Windows Server 2025",            # Nicht verwendet
-        
-        # Exchange Server Versionen (veraltet)
-        "Windows Exchange Server 2019",   # Ältere Exchange Version
-        "Exchange Server 2013",           # Exchange 2013 (EOL: 2023)
-        "Exchange Server 2016",           # Nicht verwendet
-        "Exchange Server 2010",           # EOL
-        "Exchange Server 2007",           # EOL
-        "Exchange Server 2000",           # EOL
-        "Microsoft Lync Server 2010",     # EOL
-        "Microsoft Lync Server 2013",     # EOL
+        #==============================#
+        #       Windows Server         #
+        #==============================#
+        "Server 2003",                           		# EOL: Juli 2015
+        "Windows Server 2008",                			# EOL: Jan 2020
+        "Windows Server 2012",                			# EOL: Okt 2023
+        # "Windows Server 2016",                		# verwendet
+        "Windows Server 2019",                			# Nicht verwendet
+        "Windows Server 2022",                			# Nicht verwendet
+        "Windows Server 2025",                			# Nicht verwendet
+    
+        #==============================#
+        #         Exchange Server      #
+        #==============================#
+        "Exchange Server 2000",               			# EOL: Juli 2011
+        "Exchange Server 2007",               			# EOL: April 2017
+        "Exchange Server 2010",               			# EOL: Okt 2020
+        "Exchange Server 2013",               			# EOL: April 2023
+        "Exchange Server 2016",               			# Nicht verwendet
+        "Exchange Server 2019",               			# Nicht verwendet
+    
+        #==============================#
+        #     Lync / Skype / OCS       #
+        #==============================#
+        "Microsoft Lync Server 2010",         			# EOL: ca. 2022
+        "Microsoft Lync 2013",                			# EOL: ca. 2022
+        "Microsoft Lync 2010",                			# EOL: ca. 2022
+        "Office Communicator Server 2007",    			# EOL: ca. 2017
+        "Office Communications Server 2007",  			# EOL: ca. 2017
+        "Skype for Business 2015",           			# EOL: Okt 2025
+    
+        #==============================#
+        #     SBS / SharePoint / SC     #
+        #==============================#
+        "Small Business Server 2011",         			# EOL: Jan 2020
+        "Business Server 2015",              			# EOL: ca. 2020
+        "SharePoint Server 2016",            			# Nicht verwendet
+        "SharePoint Server 2019",            			# Nicht verwendet
+        "System Center",                     			# Nicht verwendet
+    
+        #==============================#
+        #         SQL Server           #
+        #==============================#
+        "SQL Server 2000",                   			# EOL: April 2013
+        "SQL Server 2005",                   			# EOL: April 2016
+        "SQL Server 2008",                   			# EOL: Juli 2019
+        "SQL Server 2012",                   			# EOL: Juli 2022
+        "SQL Server 2014",                   			# EOL: Juli 2024
+        # "SQL Server 2016",                   			# verwendet
+        "SQL Server 2017",                   			# Nicht verwendet
+        "SQL Server 2019",                   			# Nicht verwendet
+    
+        #==============================#
+        #       Office-Produkte        #
+        #==============================#
+        "Office XP",                            		# EOL: Juli 2011
+        "Office 2003",                          		# EOL: April 2014
+        "Office 2007",                          		# EOL: Okt 2017
+        "Office 2010",                          		# EOL: Okt 2020
+        "Office 2013",                          		# EOL: April 2023
+        # "Office 2016",                          		# EOL: Okt 2025 (Mainstream Support Ende)
+        # "Office 2019",                          		# EOL: Oktober 2025 (Langzeit)
+        # "Office 2021",                          		# Aktuelle Version, LTS
 
-        # Sonstige Server-Produkte
-        "Business Server 2015",           # Small Business Server (EOL)
-        "SharePoint Server 2016",         # Nicht verwendet
-        "SharePoint Server 2019",         # Nicht verwendet
-        "System Center",                  # Nicht verwendet
+        #==============================#
+        #      Publisher-Produkte      #
+        #==============================#
+        "Publisher 2000",                     			# EOL: ca. 2010
+        "Publisher 2002",                     			# EOL: ca. 2007
+        "Publisher 2003",                     			# EOL: April 2014
+        "Publisher 2007",                     			# EOL: Okt 2017
+        "Publisher 2010",                     			# EOL: Okt 2020
+        "Publisher 2013",                     			# EOL: April 2023
+        # "Publisher 2016",                    			# EOL: Okt 2025
+        # "Publisher 2019",                  			# EOL: Okt 2025
+        # "Publisher 2021",                     		# Aktuelle Version, LTS
         
-        # SQL Server Versionen (veraltet)
-        "SQL Server 2000",
-        "SQL Server 2005",                # SQL Server 2008 (EOL: 2019)
-        "SQL Server 2008",                # SQL Server 2008 (EOL: 2019)
-        "SQL Server 2012",                # SQL Server 2012 (EOL: 2022)
-        "SQL Server 2014",                # SQL Server 2014 (EOL: 2024)
-        "SQL Server 2016",                # SQL Server 2016 (EOL: 2026) - prüfen ob verwendet
-        "SQL Server 2017",                # Nicht verwendet
-        "SQL Server 2019",                # Nicht verwendet
+        #==============================#
+        #        Visio-Produkte        #
+        #==============================#
+        "Visio 2000",                        			# EOL: ca. 2010
+        "Visio 2002",                        			# EOL: ca. 2007
+        "Visio 2003",                        			# EOL: April 2014
+        "Visio 2007",                        			# EOL: Okt 2017
+        "Visio 2010",                       			# EOL: Okt 2020
+        "Visio 2013",                       			# EOL: April 2023
+        # "Visio 2016",                       			# EOL: Okt 2025
+        # "Visio 2019",                        			# EOL: Okt 2025
+        # "Visio 2021",                        			# Aktuelle Version, LTS
         
-        # Office Versionen (End-of-Life) - Sie haben nur neuere
-        "Office XP",                      # EOL
-        "Office Communications Server 2007",
-        "Office Communicator Server 2007 R2",
-        "Office 2003",                    # Office 2003 (EOL: 2014)
-        "Office 2007",                    # Office 2007 (EOL: 2017)
-        "Office 2010",                    # Office 2010 (EOL: 2020)
-        "Office 2013",                    # Office 2013 (EOL: 2023)
-        "Microsoft Visio 2010",           # Visio 2010 (EOL: 2020)
-        "Microsoft Visio 2013",           # Nicht verwendet
-        "Microsoft Project 2010",         # Nicht verwendet
-        "Microsoft Project 2013",         # Nicht verwendet
-        "Microsoft Lync 2010",            # EOL
-        "Visual Studio 2005",             # EOL
-        "Visual Studio 2008",             # EOL
-        "Visual Studio 2010",             # EOL
-        "Visual Studio 2012",             # EOL
-        
-        # Windows Client Versionen (End-of-Life)
-        "Windows 2000",                   # Windows 2000 (EOL: 2008)
-        "Windows Vista",                  # Windows Vista (EOL: 2017)
-        "Windows XP",                     # Windows XP (EOL: 2014)
-        "Windows 7",                      # Windows 7 (EOL: 2020)
-        "Windows 8",                      # Windows 8/8.1 (EOL: 2023)
-        "Windows RT",                     # Windows RT (EOL)
-        "Windows Embedded"                # Nicht verwendet
-        "Forefront Identity Manager 2010 R2",
-        "Forefront Identity Manager 2010",
-        "Virtual PC",
-        "Virtual Server"
+        #==============================#
+        #         Project-Produkte     #
+        #==============================#
+        "Project 2000",                      			# EOL: ca. 2010
+        "Project 2002",                      			# EOL: ca. 2007
+        "Project 2003",                      			# EOL: April 2014
+        "Project 2007",                      			# EOL: Okt 2017
+        "Project 2010",                      			# EOL: Okt 2020
+        "Project 2013",                      			# EOL: April 2023
+        # "Project 2016",                      			# EOL: Okt 2025
+        # "Project 2019",                      			# EOL: Okt 2025
+        # "Project 2021",                      			# Aktuelle Version, LTS
+
+        #==============================#
+        #   Visio / Project / Einzel   #
+        #==============================#
+        "Project 2002",                      			# EOL: ca. 2007
+        "Project 2010",                      			# Nicht verwendet
+        "Project 2013",                      			# Nicht verwendet
+        "Access 2002",                       			# EOL: ca. 2007
+        "Outlook 2002",                      			# EOL: ca. 2007
+        "Word 2002",                         			# EOL: ca. 2007
+        "Excel 2002",                        			# EOL: ca. 2007
+    
+        #==============================#
+        #        Visual Studio         #
+        #==============================#
+        "Visual Studio 2005",                			# EOL: ca. 2016
+        "Visual Studio 2008",                			# EOL: April 2018
+        "Visual Studio 2010",                			# EOL: Juli 2020
+        "Visual Studio 2012",                			# EOL: Jan 2023
+        "Visual Studio 2013",                			# EOL: April 2024 (geschätzt)
+        "Visual Studio 2015",                			# EOL: Okt 2025 (geschätzt)
+        # "Visual Studio 2017",                			# EOL: Okt 2025 (geschätzt)
+        # "Visual Studio 2019",                			# EOL: Okt 2025 (geschätzt)
+        # "Visual Studio 2022",                			# Aktuelle Version, Langzeit-Support
+    
+        #==============================#
+        #          Windows OS          #
+        #==============================#
+        "Windows 2000",                      			# EOL: Juli 2010
+        "Windows XP",                        			# EOL: April 2014
+        "Windows Vista",                     			# EOL: April 2017
+        "Windows 7",                         			# EOL: Jan 2020
+        "Windows 8",                         			# EOL: Jan 2023
+        "Windows 8.1",                       			# EOL: Jan 2023
+        "Windows RT",                        			# EOL: ca. 2017
+        "Windows Embedded",                  			# Nicht verwendet
+    
+        #==============================#
+        #        Forefront / VM        #
+        #==============================#
+        "Forefront Identity Manager 2010",   			# EOL: ca. 2022
+        "Forefront Identity Manager 2010 R2",			# EOL: ca. 2022
+        "Virtual PC",                        			# EOL: ca. 2011
+        "Virtual Server",                    			# EOL: ca. 2011
+    
+        #==============================#
+        #      Browser / Add-ons       #
+        #==============================#
+        "Microsoft Edge Legacy",             			# EOL: März 2021
+        "Internet Explorer",                 			# EOL: Juni 2022
+        "Silverlight",                       			# EOL: Okt 2021
+        "Windows Media Player",              			# Optional / selten benötigt
+    
+        #==============================#
+        #   Sonstige / Demo-Spiele     #
+        #==============================#
+        "DreamScene",                        		    # Vista-Feature – EOL
+        "Pokerspiel",                        		    # Demo-Spiel – abgewählt
+        'Pokerspiel "Hold Em"',             			# Demo-Spiel – abgewählt
+        "Tinker"                            		    # Demo-Spiel – abgewählt
     )
+
     
     # Unerwünschte Update-Muster im Titel
     TitlePatterns = @(
         # Sprachpakete (Language Packs) - außer Deutsch/Englisch
-        "_LP",                            # Language Pack Suffix
-        "_LIP",                           # Language Interface Pack Suffix
-        "Language Interface Pack",        # Vollständige Sprachpakete
-        "Language Pack",                  # Vollständige Sprachpakete
-        
-        # Entwickler-/Test-Versionen
-        "Beta",                           # Beta-Versionen (Testversionen)
-        "insider",                        # Windows Insider Preview Updates
-        "Preview",                        # Vorschau-Versionen
-        "Dev Kanal",                      # Development Channel Updates
-        "Canary",                         # Canary Channel Updates
-        "RC",                             # Release Candidate
-        "CTP",                            # Community Technology Preview
-        
-        # Architektur-spezifische Ausschlüsse (falls nur 64-Bit)
-        "Arm",                            # ARM-basierte Updates (falls keine ARM-Geräte)
-        "ARM64",                          # ARM64 Updates
-        "x86 Client",                     # 32-Bit Client Updates (falls nur 64-Bit)
-        "x86-basierte",                   # Weitere 32-Bit Referenzen
-        "Itanium",                        # Itanium-Architektur (veraltet)
-        "IA64",                           # Intel Itanium 64-bit
-        
-        # PowerShell Versionen (falls nur Windows PowerShell gewünscht)
-        "Powershell v7",                  # PowerShell Core v7
-        "Powershell LTS v7",              # PowerShell LTS (Long Term Support) v7
-        "PowerShell 7",                   # Alternative Schreibweise
-        
+        "_LP",                            				# Language Pack Suffix
+        "_LIP",                           				# Language Interface Pack Suffix
+        "Language Interface Pack",        				# Vollständige Sprachpakete
+        "Language Pack",                  				# Vollständige Sprachpakete
+
+        # Architektur-spezifische Ausschlüsse (wenn keine Geräte mit dieser Architektur)
+        "Arm",                           				# ARM-basierte Updates
+        "ARM64",                         				# ARM64 Updates
+        "IA64",                          				# Intel Itanium 64-bit
+        "Itanium",                      				# Itanium-Architektur (veraltet)
+        "x86 Client",                   				# 32-Bit Client Updates (bei nur 64-Bit Systemen)
+        "x86-basierte",                 				# Weitere 32-Bit Referenzen
+
+        # Entwickler-/Test-Versionen (Beta, Insider, Preview, Dev-Channel etc.)
+        "Beta",                          				# Beta-Versionen (Testversionen)
+        "Canary",                        				# Canary Channel Updates
+        "CTP",                           				# Community Technology Preview
+        "Dev Kanal",                     				# Development Channel Updates
+        "Insider",                       				# Windows Insider Preview Updates
+        "Preview",                       				# Vorschau-Versionen
+        "RC",                           				# Release Candidate
+
+        # PowerShell Versionen
+        "PowerShell 7",                  				# PowerShell 7 (Core)
+        "Powershell LTS v7",             				# PowerShell LTS (Long Term Support) v7
+        "Powershell v7",                 				# PowerShell Core v7
+
         # Windows 11 Upgrade-Verhinderung
-        "Upgrade to Windows 11",          # Windows 11 Upgrades
-        
-        # Superseded/Abgelöste Updates (werden automatisch erkannt, aber zusätzlich)
-        "superseded",                     # Explizit abgelöste Updates
-        "replaced",                       # Ersetzte Updates
-        
-        # Tools und Features die oft nicht benötigt werden
-        "Windows Media Player",           # Falls nicht benötigt
-        "Internet Explorer",              # Falls Edge verwendet wird
-        "Microsoft Edge Legacy",          # Altes Edge (nicht Chromium)
-        "Silverlight",                    # Veraltete Technologie
-        
-        # Server Core spezifisch (falls Sie GUI-Server haben)
-        "Server Core",                    # Falls nur GUI-Server verwendet
-        
-        # Optionale Features die selten benötigt werden
-        "Container",                      # Falls keine Container verwendet
-        "WSL",                            # Windows Subsystem for Linux
-        "Subsystem for Linux",            # Windows Subsystem for Linux
-         
-        "Pokerspiel",
-        'Pokerspiel "Hold Em"',                     # 
-        "Tinker",
-        "SQL Server 2005",
-        "SQL Server 2008",
-        "Visio 2002",
-        "PowerPoint 2002",
-        "Office XP",
-        "Project 2002", 
-        "Visio 2002",
-        "Access 2002",
-        "Outlook 2002",
-        "Exchange 2000",
-        "Word 2002",
-        "Publisher 2002",
-        "Excel 2002",
-        "Windows 8.1",
-        "Taiwanese",
-        "Japanisch",
-        "DreamScene",
-        "Koreanisch"              # 
+        "Upgrade to Windows 11",         				# Windows 11 Upgrade Updates
+
+        # Superseded/Abgelöste Updates (werden meist automatisch erkannt)
+        "replaced",                      				# Ersetzte Updates
+        "superseded",                    				# Explizit abgelöste Updates
+
+        # Tools und Features, die oft nicht benötigt werden
+        "DreamScene",                    				# Vista Ultimate Feature – EOL
+        "Internet Explorer",             				# Veralteter Browser – EOL
+        "Microsoft Edge Legacy",         				# Altes Edge (nicht Chromium)
+        "Pokerspiel",                   				# Demo-Spiel – abgewählt
+        'Pokerspiel "Hold Em"',         				# Demo-Spiel – abgewählt
+        "Silverlight",                  				# Veraltete Multimedia-Technologie
+        "Tinker",                       				# Demo-Spiel – abgewählt
+
+        # Server Core spezifisch (wenn nur GUI-Server verwendet werden)
+        "Server Core",                   				# Server Core spezifische Updates
+
+        # Optionale Features, die selten benötigt werden
+        "Container",                    				# Container-Funktionalität (Docker, etc.)
+        "Subsystem for Linux",           				# Windows Subsystem for Linux (WSL)
+        "WSL",                           				# Abkürzung für Windows Subsystem for Linux
+
+        # Veraltete Produkte/Versionen (teilweise mehrfach gelistet, alphabetisch sortiert)
+        "Access 2002",                  				# Access 2002 (EOL ca. 2007)
+        "Excel 2002",                  				    # Excel 2002 (EOL ca. 2007)
+        "Exchange 2000",                				# Exchange 2000 (EOL Juli 2011)
+        "Office XP",                   				    # Office XP (EOL Juli 2011)
+        "PowerPoint 2002",              				# PowerPoint 2002 (EOL ca. 2007)
+        "Project 2002",                				    # Project 2002 (EOL ca. 2007)
+        "Publisher 2002",              				    # Publisher 2002 (EOL ca. 2007)
+        "Visio 2002",                  				    # Visio 2002 (EOL ca. 2007)
+        "Word 2002",                   				    # Word 2002 (EOL ca. 2007)
+
+        # Sprachspezifische (nicht benötigte) Sprachpakete
+        "Japanisch",                    				# Japanische Sprachpakete
+        "Koreanisch",                  				    # Koreanische Sprachpakete
+        "Taiwanese"                    				    # Taiwanesische Sprachpakete
     )
 }
+
 
 # Hauptfunktion
 function Start-WSUSCleanup {
