@@ -36,7 +36,7 @@ param(
 )
 
 # Starte Protokollierung
-$LogFile = Join-Path -Path $PSScriptRoot -ChildPath "ISO-Mapping_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+# $LogFile = Join-Path -Path $PSScriptRoot -ChildPath "ISO-Mapping_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
 function Write-Log {
     param(
         [Parameter(Mandatory = $true)]
@@ -51,7 +51,7 @@ function Write-Log {
     $LogMessage = "[$TimeStamp] [$Level] $Message"
     
     # In Datei und Konsole schreiben
-    Add-Content -Path $LogFile -Value $LogMessage
+    # Add-Content -Path $LogFile -Value $LogMessage
     
     # Farbige Konsolenausgabe
     switch ($Level) {
@@ -95,7 +95,7 @@ $vmIsoMapping = @{
     "VM PROD MAIL 01"         = @("AiO.iso")
     "VM PROD MAIL 02"         = @("AiO.iso", "Domino.iso")
     "VM PROD ITWATCH 01"      = @("AiO.iso", "itWESS.iso", "SQL_SRV_2017_RTM.iso")
-    "VM PROD PRT 01"          = @("AiO.iso")
+    "VM PROD PRINT 01"          = @("AiO.iso")
     "VM PROD DHCP 01"         = @("AiO.iso")
     "VM PROD WDS 01"          = @("AiO.iso", "Windows10_22H2.iso")
     "VM PROD WEB 01"          = @("AiO.iso")
