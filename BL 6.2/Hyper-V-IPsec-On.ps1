@@ -23,7 +23,7 @@
 .NOTES
     Autor: ErikSlevin
     Datum: 04.055.2025
-    Version: 0.1
+    Version: 0.2
 #>
 
 [CmdletBinding()]
@@ -38,7 +38,7 @@ param(
 )
 
 # Initialisiere Logging
-$LogFile = Join-Path -Path $PSScriptRoot -ChildPath "IPSec-Config_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+# $LogFile = Join-Path -Path $PSScriptRoot -ChildPath "IPSec-Config_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
 function Write-Log {
     param(
         [Parameter(Mandatory = $true)]
@@ -53,7 +53,7 @@ function Write-Log {
     $LogMessage = "[$TimeStamp] [$Level] $Message"
     
     # In Datei und Konsole schreiben
-    Add-Content -Path $LogFile -Value $LogMessage
+    # Add-Content -Path $LogFile -Value $LogMessage
     
     # Farbige Konsolenausgabe
     switch ($Level) {
