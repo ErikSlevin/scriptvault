@@ -130,7 +130,7 @@ try {
         Write-Log "Bearbeite VM: $($vm.Name)" -Level INFO
         
         # Status der VM prüfen
-        if ($vm.State -ne 'Running') {
+        if ($vm.State -ne 'off') {
             Write-Log "VM '$($vm.Name)' ist nicht im Zustand 'Running' (Aktueller Zustand: $($vm.State)). Überspringe..." -Level WARNING
             $failedVMs++
             continue
