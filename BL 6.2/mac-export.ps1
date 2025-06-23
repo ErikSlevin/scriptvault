@@ -26,7 +26,8 @@ Foreach ($server in $servers) {
         # Aktive Netzwerkadapter abrufen
         $adapters = Get-CimInstance -ClassName Win32_NetworkAdapterConfiguration -ComputerName $server | Where-Object -Property ServiceName -eq "netvsc"
         $PC = (Get-CimInstance -ClassName Win32_ComputerSystem -ComputerName $server)
-        $ram = "$([math]::round((($PC).TotalPhysicalMemory / 1024)/1024))MB"
+        $ram = ((($PC).TotalPhysicalMemory / 1024)/1024)/1024
+        $ram = [Math]::Round($ram,2)
         $FQDN = "$($PC.Name).$($PC.Domain)"
         Foreach ($adapter in $adapters) {
             # Erste IPv4-Adresse verwenden
@@ -37,7 +38,7 @@ Foreach ($server in $servers) {
                 ‚FQDN‘        = $FQDN
                 ‚MACAdresse‘  = $adapter.MACAddress
                 ‚IPAdresse‘   = $primaryIP
-                ‚RAM‘         = $ram
+                ‚RAM‘         = $ram.ToString() + "GB"
             })
         }
     } catch {
