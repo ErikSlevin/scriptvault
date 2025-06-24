@@ -275,5 +275,4 @@ if ($totalFailed -gt 0) {
     Write-Host "Fehler: $totalFailed"
 }
 
-$updates.ProductTitles | Sort-Object -Unique
-
+($wsus.GetUpdates($scope) | Where-Object { -not $_.IsDeclined }).ProductTitles | Sort-Object -Unique
