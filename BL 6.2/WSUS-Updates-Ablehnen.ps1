@@ -1,36 +1,6 @@
 #Requires -Version 5.1
 #Requires -RunAsAdministrator
 
-# Logging-Funktion
-function Write-Log {
-    param(
-        [string]$Message,
-        [ValidateSet("INFO", "WARNING", "ERROR", "SUCCESS")]
-        [string]$Level = "INFO"
-    )
-    
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    # Level zentriert auf 7 Zeichen
-    $levelCentered = $Level.PadLeft([math]::Floor(($Level.Length + 7) / 2)).PadRight(7)
-    $logEntry = "[$timestamp] [$levelCentered] $Message"
-    
-    # Farbkodierung für Konsole
-    switch ($Level) {
-        "INFO"    { Write-Host $logEntry -ForegroundColor White }
-        "WARNING" { Write-Host $logEntry -ForegroundColor Yellow }
-        "ERROR"   { Write-Host $logEntry -ForegroundColor Red }
-        "SUCCESS" { Write-Host $logEntry -ForegroundColor Green }
-    }
-    
-    # In Datei schreiben (wird automatisch ergänzt)
-    try {
-        Add-Content -Path $LogPath -Value $logEntry -Encoding UTF8
-    }
-    catch {
-        Write-Host "Warnung: Konnte nicht in Logdatei schreiben: $($_.Exception.Message)" -ForegroundColor Yellow
-    }
-}
-
 function Format-TitleShort {
     param(
         [string]$title,
@@ -73,7 +43,7 @@ function Write-Color {
     $Host.UI.RawUI.ForegroundColor = $origColor
 }
 
-# Finale Liste veralteter Microsoft-Produkte (bereinigt und sortiert)
+
 $productsToDecline = @(
     # Windows Server-Produkte
     "Server 2003", "Windows Server 2008", "Windows Server 2012", "Windows Server 2019",
@@ -226,14 +196,26 @@ $productsToDecline = @(
 )
 
 # Verbindung zu WSUS (lokal, kein SSL, Port 8530)
+# [void][reflection.assembly]::LoadWithPartialName('Microsoft.UpdateServices.Administration')
+# $wsus = [Microsoft.UpdateServices.Administration.AdminProxy]::GetUpdateServer($env:COMPUTERNAME, $false, 8530)
+
 [void][reflection.assembly]::LoadWithPartialName('Microsoft.UpdateServices.Administration')
 $wsus = [Microsoft.UpdateServices.Administration.AdminProxy]::GetUpdateServer($env:COMPUTERNAME.$env:USERDNSDOMAIN" $true, 8531)
 
 # Funktion: Bestimme den Grund für Ablehnung
 function Get-DeclineReason {
     param($update)
+    
+    # Zuerst prüfen, ob es ein Sprachpaket ist (außer en-US und de-DE)
+    if ($update.ProductTitles -like "*Language*" -and 
+        $update.Title -notmatch '\[en-US_LP\]' -and 
+        $update.Title -notmatch '\[de-DE_LP\]') {
+        return "Sprachpakete"
+    }
+    
     if ($update.IsBeta) { return "Beta" }
     if ($update.IsSuperseded) { return "Superseded" }
+    
     foreach ($pt in $update.ProductTitles) {
         foreach ($prod in $productsToDecline) {
             if ($pt.IndexOf($prod, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
@@ -298,42 +280,6 @@ foreach ($group in $groupedUpdates.Keys) {
     Write-Host ""
 }
 
-
-# Sprachen ablehnen
-$languages = $updates | Where-Object {
-    $_.ProductTitles -like "*Language*"
-} | Where-Object {
-    $_.Title -notmatch '\[en-US_LP\]' -and $_.Title -notmatch '\[de-DE_LP\]'
-}
-
-Write-Host -ForegroundColor Cyan "`n=== Sprachpakete ====================================================================================================="
-foreach ($language in $languages) {
-    try {
-        $language.Decline()
-
-        # Formatieren
-        $formatResult = Format-TitleShort -title $language.Title -kbArticles $language.KnowledgebaseArticles
-        $shortTitle = $formatResult.Title
-        $kb = $formatResult.KB
-
-        # Ausgabe
-        Write-Host "[x] " -Foregroundcolor Red -NoNewline
-        Write-Host "[Sprachpaket]" -Foregroundcolor Cyan -NoNewline
-        if ($kb) {
-            Write-Host -NoNewline " $shortTitle "
-            Write-Host "($kb)" -Foregroundcolor Yellow
-        } else {
-            Write-Host " $shortTitle "
-        }
-        $totalDeclined++
-    }
-    catch {
-        Write-Host "  FEHLER bei '$($language.Title)'"
-        $totalFailed++
-    }
-    Write-Host ""
-}
-
 # Abschluss
 Write-Host "Fertig."
 Write-Host "Abgelehnt: $totalDeclined"
@@ -341,5 +287,5 @@ if ($totalFailed -gt 0) {
     Write-Host "Fehler: $totalFailed"
 }
 
+$updates.ProductTitles | Sort-Object -Unique
 
-# $updates.ProductTitles | Sort-Object -Unique
