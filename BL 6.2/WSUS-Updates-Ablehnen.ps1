@@ -298,6 +298,42 @@ foreach ($group in $groupedUpdates.Keys) {
     Write-Host ""
 }
 
+
+# Sprachen ablehnen
+$languages = $updates | Where-Object {
+    $_.ProductTitles -like "*Language*"
+} | Where-Object {
+    $_.Title -notmatch '\[en-US_LP\]' -and $_.Title -notmatch '\[de-DE_LP\]'
+}
+
+foreach ($language in $languages) {
+    Write-Host -ForegroundColor Cyan "`n=== Sprachpakete ====================================================================================================="
+    try {
+        $language.Decline()
+
+        # Formatieren
+        $formatResult = Format-TitleShort -title $language.Title -kbArticles $language.KnowledgebaseArticles
+        $shortTitle = $formatResult.Title
+        $kb = $formatResult.KB
+
+        # Ausgabe
+        Write-Host "[x] " -Foregroundcolor Red -NoNewline
+        Write-Host "[Sprachpaket]" -Foregroundcolor Cyan -NoNewline
+        if ($kb) {
+            Write-Host -NoNewline " $shortTitle "
+            Write-Host "($kb)" -Foregroundcolor Yellow
+        } else {
+            Write-Host " $shortTitle "
+        }
+        $totalDeclined++
+    }
+    catch {
+        Write-Host "  FEHLER bei '$($language.Title)'"
+        $totalFailed++
+    }
+    Write-Host ""
+}
+
 # Abschluss
 Write-Host "Fertig."
 Write-Host "Abgelehnt: $totalDeclined"
