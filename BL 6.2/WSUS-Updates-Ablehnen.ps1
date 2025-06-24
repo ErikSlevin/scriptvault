@@ -306,8 +306,8 @@ $languages = $updates | Where-Object {
     $_.Title -notmatch '\[en-US_LP\]' -and $_.Title -notmatch '\[de-DE_LP\]'
 }
 
+Write-Host -ForegroundColor Cyan "`n=== Sprachpakete ====================================================================================================="
 foreach ($language in $languages) {
-    Write-Host -ForegroundColor Cyan "`n=== Sprachpakete ====================================================================================================="
     try {
         $language.Decline()
 
