@@ -200,7 +200,7 @@ $productsToDecline = @(
 # $wsus = [Microsoft.UpdateServices.Administration.AdminProxy]::GetUpdateServer($env:COMPUTERNAME, $false, 8530)
 
 [void][reflection.assembly]::LoadWithPartialName('Microsoft.UpdateServices.Administration')
-$wsus = [Microsoft.UpdateServices.Administration.AdminProxy]::GetUpdateServer($env:COMPUTERNAME.$env:USERDNSDOMAIN" $true, 8531)
+$wsus = [Microsoft.UpdateServices.Administration.AdminProxy]::GetUpdateServer($env:COMPUTERNAME.$env:USERDNSDOMAIN,$true, 8531)
 
 # Funktion: Bestimme den Grund für Ablehnung
 function Get-DeclineReason {
