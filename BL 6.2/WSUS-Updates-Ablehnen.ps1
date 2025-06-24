@@ -32,18 +32,6 @@ function Format-TitleShort {
     return @{ Title = $title; KB = $kb }
 }
 
-function Write-Color {
-    param(
-        [string]$text,
-        [ConsoleColor]$color
-    )
-    $origColor = $Host.UI.RawUI.ForegroundColor
-    $Host.UI.RawUI.ForegroundColor = $color
-    Write-Host -NoNewline $text
-    $Host.UI.RawUI.ForegroundColor = $origColor
-}
-
-
 $productsToDecline = @(
     # Windows Server-Produkte
     "Server 2003", "Windows Server 2008", "Windows Server 2012", "Windows Server 2019",
