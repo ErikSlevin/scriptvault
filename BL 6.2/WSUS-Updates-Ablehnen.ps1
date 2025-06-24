@@ -1,67 +1,6 @@
-<#
-.SYNOPSIS
-    WSUS Updates automatisch ablehnen basierend auf Produkte und Titel
-.DESCRIPTION
-    Dieses PowerShell-Script verbindet sich mit einem WSUS-Server und 
-    lehnt automatisch Updates ab, die für veraltete oder unerwünschte Produkte 
-    bestimmt sind. Das Script überprüft die ProductTitles der Updates sowie
-    den Titel und lehnt Updates ab, die bestimmte Begriffe enthalten.
-.PARAMETER WSUSServer
-    Der FQDN oder die IP-Adresse des WSUS-Servers
-    
-.PARAMETER Port
-    Der Port des WSUS-Servers (Standard: 8531)
-    
-.PARAMETER UseSSL
-    Verwendet SSL für die Verbindung (Standard: $true)
-    
-.PARAMETER WhatIf
-    Führt eine Simulation aus ohne tatsächliche Änderungen
-    
-.PARAMETER LogPath
-    Pfad zur Logdatei (Standard: D:\WSUS\WSUS-Cleanup.log)
-.NOTES
-    Dateiname:    WSUS-Updates-Ablehnen.ps1
-    Autor:        Erik Slevin
-    Erstellt:     10.06.2025
-    Version:      0.1
-    Voraussetzung: WSUS-Server muss erreichbar und konfiguriert sein gem. InstAnw.
-                    
-.EXAMPLE
-    .\WSUS-Updates-Ablehnen.ps1
-    Führt das Script mit Standardparametern aus
-    
-.EXAMPLE
-    .\WSUS-Updates-Ablehnen-Optimiert.ps1 -WSUSServer "wsus.domain.local" -WhatIf
-    Simulation ohne tatsächliche Änderungen
-#>
-[CmdletBinding(SupportsShouldProcess)]
-param(
-    [Parameter(Mandatory = $false)]
-    [string]$WSUSServer = "$env:COMPUTERNAME.$env:USERDNSDOMAIN",
-    
-    [Parameter(Mandatory = $false)]
-    [int]$Port = 8531,
-    
-    [Parameter(Mandatory = $false)]
-    [bool]$UseSSL = $true,
-    
-    [Parameter(Mandatory = $false)]
-    [string]$LogPath = "D:\WSUS\WSUS-Cleanup.log"
-)
-# Log-Verzeichnis erstellen falls nicht vorhanden
-$logDirectory = Split-Path -Path $LogPath -Parent
-if (-not (Test-Path -Path $logDirectory)) {
-    try {
-        New-Item -Path $logDirectory -ItemType Directory -Force | Out-Null
-        Write-Host "Log-Verzeichnis erstellt: $logDirectory" -ForegroundColor Green
-    }
-    catch {
-        Write-Host "Fehler beim Erstellen des Log-Verzeichnisses: $($_.Exception.Message)" -ForegroundColor Red
-        Write-Host "Verwende aktuelles Verzeichnis für Logs" -ForegroundColor Yellow
-        $LogPath = ".\WSUS-Cleanup.log"
-    }
-}
+#Requires -Version 5.1
+#Requires -RunAsAdministrator
+
 # Logging-Funktion
 function Write-Log {
     param(
@@ -92,387 +31,279 @@ function Write-Log {
     }
 }
 
-# Konfiguration der abzulehnenden Produkte und Begriffe
-$declineConfig = @{
-    # Veraltete Produkte
-    Products = @(
-        #==============================#
-        #       Windows Server         #
-        #==============================#
-        "Server 2003",                           		# EOL: Juli 2015
-        "Windows Server 2008",                			# EOL: Jan 2020
-        "Windows Server 2012",                			# EOL: Okt 2023
-        # "Windows Server 2016",                		# verwendet
-        "Windows Server 2019",                			# Nicht verwendet
-        "Windows Server 2022",                			# Nicht verwendet
-        "Windows Server 2025",                			# Nicht verwendet
-    
-        #==============================#
-        #         Exchange Server      #
-        #==============================#
-        "Exchange Server 2000",               			# EOL: Juli 2011
-        "Exchange Server 2007",               			# EOL: April 2017
-        "Exchange Server 2010",               			# EOL: Okt 2020
-        "Exchange Server 2013",               			# EOL: April 2023
-        "Exchange Server 2016",               			# Nicht verwendet
-        "Exchange Server 2019",               			# Nicht verwendet
-    
-        #==============================#
-        #     Lync / Skype / OCS       #
-        #==============================#
-        "Microsoft Lync Server 2010",         			# EOL: ca. 2022
-        "Microsoft Lync 2013",                			# EOL: ca. 2022
-        "Microsoft Lync 2010",                			# EOL: ca. 2022
-        "Office Communicator Server 2007",    			# EOL: ca. 2017
-        "Office Communications Server 2007",  			# EOL: ca. 2017
-        "Skype for Business 2015",           			# EOL: Okt 2025
-    
-        #==============================#
-        #     SBS / SharePoint / SC     #
-        #==============================#
-        "Small Business Server 2011",         			# EOL: Jan 2020
-        "Business Server 2015",              			# EOL: ca. 2020
-        "SharePoint Server 2016",            			# Nicht verwendet
-        "SharePoint Server 2019",            			# Nicht verwendet
-        "System Center",                     			# Nicht verwendet
-    
-        #==============================#
-        #         SQL Server           #
-        #==============================#
-        "SQL Server 2000",                   			# EOL: April 2013
-        "SQL Server 2005",                   			# EOL: April 2016
-        "SQL Server 2008",                   			# EOL: Juli 2019
-        "SQL Server 2012",                   			# EOL: Juli 2022
-        "SQL Server 2014",                   			# EOL: Juli 2024
-        # "SQL Server 2016",                   			# verwendet
-        "SQL Server 2017",                   			# Nicht verwendet
-        "SQL Server 2019",                   			# Nicht verwendet
-    
-        #==============================#
-        #       Office-Produkte        #
-        #==============================#
-        "Office XP",                            		# EOL: Juli 2011
-        "Office 2003",                          		# EOL: April 2014
-        "Office 2007",                          		# EOL: Okt 2017
-        "Office 2010",                          		# EOL: Okt 2020
-        "Office 2013",                          		# EOL: April 2023
-        # "Office 2016",                          		# EOL: Okt 2025 (Mainstream Support Ende)
-        # "Office 2019",                          		# EOL: Oktober 2025 (Langzeit)
-        # "Office 2021",                          		# Aktuelle Version, LTS
-        "Office 365",                          			# Nicht verwendet
-        "Microsoft 365",                       			# Nicht verwendet
-
-        #==============================#
-        #      Publisher-Produkte      #
-        #==============================#
-        "Publisher 2000",                     			# EOL: ca. 2010
-        "Publisher 2002",                     			# EOL: ca. 2007
-        "Publisher 2003",                     			# EOL: April 2014
-        "Publisher 2007",                     			# EOL: Okt 2017
-        "Publisher 2010",                     			# EOL: Okt 2020
-        "Publisher 2013",                     			# EOL: April 2023
-        # "Publisher 2016",                    			# EOL: Okt 2025
-        # "Publisher 2019",                  			# EOL: Okt 2025
-        # "Publisher 2021",                     		# Aktuelle Version, LTS
-        
-        #==============================#
-        #        Visio-Produkte        #
-        #==============================#
-        "Visio 2000",                        			# EOL: ca. 2010
-        "Visio 2002",                        			# EOL: ca. 2007
-        "Visio 2003",                        			# EOL: April 2014
-        "Visio 2007",                        			# EOL: Okt 2017
-        "Visio 2010",                       			# EOL: Okt 2020
-        "Visio 2013",                       			# EOL: April 2023
-        # "Visio 2016",                       			# EOL: Okt 2025
-        # "Visio 2019",                        			# EOL: Okt 2025
-        # "Visio 2021",                        			# Aktuelle Version, LTS
-        
-        #==============================#
-        #         Project-Produkte     #
-        #==============================#
-        "Project 2000",                      			# EOL: ca. 2010
-        "Project 2002",                      			# EOL: ca. 2007
-        "Project 2003",                      			# EOL: April 2014
-        "Project 2007",                      			# EOL: Okt 2017
-        "Project 2010",                      			# EOL: Okt 2020
-        "Project 2013",                      			# EOL: April 2023
-        # "Project 2016",                      			# EOL: Okt 2025
-        # "Project 2019",                      			# EOL: Okt 2025
-        # "Project 2021",                      			# Aktuelle Version, LTS
-
-        #==============================#
-        #   Visio / Project / Einzel   #
-        #==============================#
-        "Project 2002",                      			# EOL: ca. 2007
-        "Project 2010",                      			# Nicht verwendet
-        "Project 2013",                      			# Nicht verwendet
-        "Access 2002",                       			# EOL: ca. 2007
-        "Outlook 2002",                      			# EOL: ca. 2007
-        "Word 2002",                         			# EOL: ca. 2007
-        "Excel 2002",                        			# EOL: ca. 2007
-    
-        #==============================#
-        #        Visual Studio         #
-        #==============================#
-        "Visual Studio 2005",                			# EOL: ca. 2016
-        "Visual Studio 2008",                			# EOL: April 2018
-        "Visual Studio 2010",                			# EOL: Juli 2020
-        "Visual Studio 2012",                			# EOL: Jan 2023
-        "Visual Studio 2013",                			# EOL: April 2024 (geschätzt)
-        "Visual Studio 2015",                			# EOL: Okt 2025 (geschätzt)
-        # "Visual Studio 2017",                			# EOL: Okt 2025 (geschätzt)
-        # "Visual Studio 2019",                			# EOL: Okt 2025 (geschätzt)
-        # "Visual Studio 2022",                			# Aktuelle Version, Langzeit-Support
-    
-        #==============================#
-        #          Windows OS          #
-        #==============================#
-        "Windows 2000",                      			# EOL: Juli 2010
-        "Windows XP",                        			# EOL: April 2014
-        "Windows Vista",                     			# EOL: April 2017
-        "Windows 7",                         			# EOL: Jan 2020
-        "Windows 8",                         			# EOL: Jan 2023
-        "Windows 8.1",                       			# EOL: Jan 2023
-        "Windows RT",                        			# EOL: ca. 2017
-        "Windows Embedded",                  			# Nicht verwendet
-    
-        #==============================#
-        #        Forefront / VM        #
-        #==============================#
-        "Forefront Identity Manager 2010",   			# EOL: ca. 2022
-        "Forefront Identity Manager 2010 R2",			# EOL: ca. 2022
-        "Virtual PC",                        			# EOL: ca. 2011
-        "Virtual Server",                    			# EOL: ca. 2011
-    
-        #==============================#
-        #      Browser / Add-ons       #
-        #==============================#
-        "Microsoft Edge Legacy",             			# EOL: März 2021
-        "Internet Explorer",                 			# EOL: Juni 2022
-        "Silverlight",                       			# EOL: Okt 2021
-        "Windows Media Player",              			# Optional / selten benötigt
-    
-        #==============================#
-        #   Sonstige / Demo-Spiele     #
-        #==============================#
-        "DreamScene",                        		    # Vista-Feature – EOL
-        "Pokerspiel",                        		    # Demo-Spiel – abgewählt
-        'Pokerspiel "Hold Em"',             			# Demo-Spiel – abgewählt
-        "Tinker"                            		    # Demo-Spiel – abgewählt
+function Format-TitleShort {
+    param(
+        [string]$title,
+        [string[]]$kbArticles,
+        [int]$maxLen = 70
     )
 
-    
-    # Unerwünschte Update-Muster im Titel
-    TitlePatterns = @(
-        # Sprachpakete (Language Packs) - außer Deutsch/Englisch
-        "_LP",                            				# Language Pack Suffix
-        "_LIP",                           				# Language Interface Pack Suffix
-        "Language Interface Pack",        				# Vollständige Sprachpakete
-        "Language Pack",                  				# Vollständige Sprachpakete
+    # Titel als String sicherstellen
+    $title = [string]$title
 
-        # Architektur-spezifische Ausschlüsse (wenn keine Geräte mit dieser Architektur)
-        "Arm",                           				# ARM-basierte Updates
-        "ARM64",                         				# ARM64 Updates
-        "IA64",                          				# Intel Itanium 64-bit
-        "Itanium",                      				# Itanium-Architektur (veraltet)
-        "x86 Client",                   				# 32-Bit Client Updates (bei nur 64-Bit Systemen)
-        "x86-basierte",                 				# Weitere 32-Bit Referenzen
+    # KB-Nummer extrahieren aus $kbArticles
+    $kb = ""
+    if ($kbArticles -and $kbArticles.Count -gt 0) {
+        $kb = "KB" + $kbArticles[0]
+    }
 
-        # Entwickler-/Test-Versionen (Beta, Insider, Preview, Dev-Channel etc.)
-        "Beta",                          				# Beta-Versionen (Testversionen)
-        "Canary",                        				# Canary Channel Updates
-        "CTP",                           				# Community Technology Preview
-        "Dev Kanal",                     				# Development Channel Updates
-        "Insider",                       				# Windows Insider Preview Updates
-        "Preview",                       				# Vorschau-Versionen
-        "RC",                           				# Release Candidate
+    # KB-Nummer (inkl. Klammern) aus dem Titel entfernen (alle Vorkommen)
+    if ($kb) {
+        # Entfernt alle Vorkommen von (KBxxxxxxx) oder KBxxxxxxx im Titel
+        $title = $title -replace '\(?KB\d+\)?', ''
+        $title = $title.Trim()
+    }
 
-        # PowerShell Versionen
-        "PowerShell 7",                  				# PowerShell 7 (Core)
-        "Powershell LTS v7",             				# PowerShell LTS (Long Term Support) v7
-        "Powershell v7",                 				# PowerShell Core v7
+    # Titel kürzen, falls zu lang
+    if ($title.Length -gt $maxLen) {
+        $title = $title.Substring(0, $maxLen).TrimEnd() + "..."
+    }
 
-        # Windows 11 Upgrade-Verhinderung
-        "Upgrade to Windows 11",         				# Windows 11 Upgrade Updates
-
-        # Superseded/Abgelöste Updates (werden meist automatisch erkannt)
-        "replaced",                      				# Ersetzte Updates
-        "superseded",                    				# Explizit abgelöste Updates
-
-        # Tools und Features, die oft nicht benötigt werden
-        "DreamScene",                    				# Vista Ultimate Feature – EOL
-        "Internet Explorer",             				# Veralteter Browser – EOL
-        "Microsoft Edge Legacy",         				# Altes Edge (nicht Chromium)
-        "Pokerspiel",                   				# Demo-Spiel – abgewählt
-        'Pokerspiel "Hold Em"',         				# Demo-Spiel – abgewählt
-        "Silverlight",                  				# Veraltete Multimedia-Technologie
-        "Tinker",                       				# Demo-Spiel – abgewählt
-
-        # Server Core spezifisch (wenn nur GUI-Server verwendet werden)
-        "Server Core",                   				# Server Core spezifische Updates
-
-        # Optionale Features, die selten benötigt werden
-        "Container",                    				# Container-Funktionalität (Docker, etc.)
-        "Subsystem for Linux",           				# Windows Subsystem for Linux (WSL)
-        "WSL",                           				# Abkürzung für Windows Subsystem for Linux
-
-        # Veraltete Produkte/Versionen (teilweise mehrfach gelistet, alphabetisch sortiert)
-        "Access 2002",                  				# Access 2002 (EOL ca. 2007)
-        "Excel 2002",                  				    # Excel 2002 (EOL ca. 2007)
-        "Exchange 2000",                				# Exchange 2000 (EOL Juli 2011)
-        "Office XP",                   				    # Office XP (EOL Juli 2011)
-        "PowerPoint 2002",              				# PowerPoint 2002 (EOL ca. 2007)
-        "Project 2002",                				    # Project 2002 (EOL ca. 2007)
-        "Publisher 2002",              				    # Publisher 2002 (EOL ca. 2007)
-        "Visio 2002",                  				    # Visio 2002 (EOL ca. 2007)
-        "Word 2002",                   				    # Word 2002 (EOL ca. 2007)
-
-        # Sprachspezifische (nicht benötigte) Sprachpakete
-        "Japanisch",                    				# Japanische Sprachpakete
-        "Koreanisch",                  				    # Koreanische Sprachpakete
-        "Taiwanese"                    				    # Taiwanesische Sprachpakete
-    )
+    return @{ Title = $title; KB = $kb }
 }
 
+function Write-Color {
+    param(
+        [string]$text,
+        [ConsoleColor]$color
+    )
+    $origColor = $Host.UI.RawUI.ForegroundColor
+    $Host.UI.RawUI.ForegroundColor = $color
+    Write-Host -NoNewline $text
+    $Host.UI.RawUI.ForegroundColor = $origColor
+}
 
-# Hauptfunktion
-function Start-WSUSCleanup {
-    Write-Log "======= WSUS Cleanup gestartet =======" "INFO"
-    Write-Log "Script-Version: 2.1" "INFO"
-    Write-Log "Server: $WSUSServer, Port: $Port, SSL: $UseSSL" "INFO"
-    Write-Log "Logdatei: $LogPath" "INFO"
+# Finale Liste veralteter Microsoft-Produkte (bereinigt und sortiert)
+$productsToDecline = @(
+    # Windows Server-Produkte
+    "Server 2003", "Windows Server 2008", "Windows Server 2012", "Windows Server 2019",
+    "Windows Server 2022", "Windows Server 2025",
+    "Small Business Server", "Small Business Server 2011", "Business Server 2015",
+    "SharePoint Server", "SharePoint Server 2016", "SharePoint Server 2019",
+    "System Center",
+    "Windows Essential Business Server 2008", "Windows Essential Business Server 2008 Setup Updates",
+    "Windows Essential Business Server Preinstallation Tools",
+    "Windows Server Technical Preview Language Packs",
+    "Windows Server Solutions Best Practices Analyzer 1.0", "Microsoft Monitoring Agent",
     
-    try {
-        # WSUS-Modul laden
-        Write-Log "Lade WSUS-Modul..." "INFO"
-        [reflection.assembly]::LoadWithPartialName("Microsoft.UpdateServices.Administration") | Out-Null
-        
-        # Verbindung zum WSUS-Server herstellen
-        Write-Log "Verbinde mit WSUS-Server..." "INFO"
+    # Exchange Server
+    "Exchange Server 2000", "Exchange 2000 Server", "Exchange Server 2007",
+    "Exchange Server 2010", "Exchange Server 2013", "Exchange Server 2016", "Exchange Server 2019",
+    "Antigen for Exchange/SMTP",
+    
+    # SQL Server
+    "SQL Server 2000", "SQL Server 2005", "SQL Server 2008", "SQL Server 2012", "SQL Server 2014",
+    "SQL Server 2017", "Microsoft SQL Server 2019",
+    "Microsoft SQL Server Management Studio v17",
+    "SQL Server Feature Pack",
+    
+    # BizTalk Server
+    "BizTalk Server 2002", "BizTalk Server 2006R2", "BizTalk Server 2009", "BizTalk Server 2013",
+    
+    # Host Integration Server
+    "Host Integration Server 2000", "Host Integration Server 2004", "Host Integration Server 2006",
+    "Host Integration Server 2009", "Host Integration Server 2010",
+    
+    # Kommunikations-Server
+    "Microsoft Lync Server", "Microsoft Lync Server 2010", "Microsoft Lync 2010", "Microsoft Lync 2013",
+    "Office Communicator Server", "Office Communicator Server 2007", "Office Communications Server",
+    "Office Communications Server 2007", "Office Communicator 2007 R2", 
+    "Skype for Business", "Skype for Business 2015",
+    
+    # Office-Produkte (einzelne Anwendungen)
+    "Office XP", "Office 2003", "Office 2007", "Office 2010", "Office 2013", "Office 365",
+    "Microsoft 365", "Office 2002/XP", "Office Live Add-in",
+    
+    # Publisher-Versionen
+    "Publisher", "Publisher 2000", "Publisher 2002", "Publisher 2003", "Publisher 2007",
+    "Publisher 2010", "Publisher 2013",
+    
+    # Visio-Versionen  
+    "Visio", "Visio 2000", "Visio 2002", "Visio 2003", "Visio 2007", "Visio 2010", "Visio 2013",
+    
+    # Project-Versionen
+    "Project", "Project 2000", "Project 2002", "Project 2003", "Project 2007", "Project 2010", "Project 2013",
+    
+    # Einzelne Office-Apps (alte Versionen)
+    "Access", "Access 2002", "Outlook", "Outlook 2002", "Word", "Word 2002", "Excel", "Excel 2002",
+    
+    # Visual Studio
+    "Visual Studio 2005", "Visual Studio 2008", "Visual Studio 2010", "Visual Studio 2012",
+    "Visual Studio 2013", "Visual Studio 2015",
+    
+    # Windows-Betriebssysteme
+    "Windows 2000", "Windows XP", "Windows Vista", "Windows 7", "Windows 8", "Windows 8.1", 
+    "Windows RT", "Windows Embedded",
+    
+    # Browser und Web-Technologien
+    "Internet Explorer", "Microsoft Edge Legacy", "Silverlight",
+    "Bing Bar", "Search Enhancement Pack",
+    
+    # Sicherheits- und Management-Tools
+    "Forefront Identity Manager", "Forefront Identity Manager 2010", "Forefront Identity Manager 2010 R2",
+    "Forefront Client Security", "Forefront Endpoint Protection 2010",
+    "Forefront Protection Category", "Forefront Server Security Category",
+    "Forefront Threat Management Gateway, Definition Updates for HTTP Malware Inspection",
+    "Forefront TMG", "Forefront TMG MBE", "Firewall Client for ISA Server",
+    "Internet Security and Acceleration Server 2004", "Internet Security and Acceleration Server 2006",
+    "Security Essentials", "OneCare Family Safety Installation",
+    "Microsoft BitLocker Administration and Monitoring v1", "Microsoft Advanced Threat Analytics",
+    
+    # Virtualisierung
+    "Virtual PC", "Virtual Server",
+    "Microsoft Application Virtualization 4.5", "Microsoft Application Virtualization 4.6",
+    "Microsoft Application Virtualization 5.0",
+    
+    # Expression-Suite (Webdesign-Tools)
+    "Expression Design 1", "Expression Design 2", "Expression Design 3", "Expression Design 4",
+    "Expression Media 2", "Expression Media V1", "Expression Web 3", "Expression Web 4",
+    
+    # Microsoft Works
+    "Microsoft Works 8", "Microsoft Works 9", "Works 6-9 Converter",
+    
+    # Microsoft Dynamics CRM
+    "Microsoft Dynamics CRM 2011", "Microsoft Dynamics CRM 2011 SHS", "Microsoft Dynamics CRM 2013", 
+    "Microsoft Dynamics CRM 2015", "Microsoft Dynamics CRM 2016", "Microsoft Dynamics CRM 2016 SHS",
+    
+    # Windows Live
+    "Windows Live", "Windows Live Toolbar",
+    
+    # Windows Azure Pack-Komponenten
+    "Windows Azure Pack: Admin API", "Windows Azure Pack: Admin Authentication Site",
+    "Windows Azure Pack: Admin Site", "Windows Azure Pack: Configuration Site",
+    "Windows Azure Pack: Microsoft Best Practice Analyzer", "Windows Azure Pack: Monitoring Extension",
+    "Windows Azure Pack: MySQL Extension", "Windows Azure Pack: PowerShell API",
+    "Windows Azure Pack: SQL Server Extension", "Windows Azure Pack: Tenant API",
+    "Windows Azure Pack: Tenant Authentication Site", "Windows Azure Pack: Tenant Public API",
+    "Windows Azure Pack: Tenant Site", "Windows Azure Pack: Usage Extension",
+    "Windows Azure Pack: Web App Gallery Extension", "Windows Azure Pack: Web Sites",
+    "Microsoft Azure Site Recovery Provider"
+    
+    # Entwickler- und Reporting-Tools
+    "ASP.NET Web Frameworks", "Report Viewer 2005", "Report Viewer 2008", "Report Viewer 2010",
+    "Microsoft StreamInsight V1.0",
+    
+    # Monitoring- und Management-Tools
+    "Data Protection Manager 2006", "HPC Pack 2008", "Network Monitor 3",
+    "Service Bus for Windows Server 1.1",
+    
+    # Health- und Multimedia-Tools
+    "HealthVault Connection Center", "HealthVault Connection Center Upgrades",
+    "Microsoft Research AutoCollage 2008", "Photo Gallery Installation and Upgrades",
+    
+    # Windows-Extras und Spiele
+    "DreamScene", "Pokerspiel", 'Pokerspiel "Hold Em"', "Tinker", "Windows Ultimate Extras",
+    "Writer Installation and Upgrades",
+    
+    # Hardware-spezifische Treiber
+    "Surface Hub 2S drivers",
+    
+    # Threat Management Gateway (weitere Komponenten)
+    "Threat Management Gateway Definition Updates for Network Inspection System",
+    "TMG Firewall Client",
+    
+    # Windows 10 S (Education-Edition, nicht für Business)
+    "Windows 10 S and Later Servicing Drivers",
+    "Windows 10 S Version 1709 and Later Servicing Drivers for testing",
+    "Windows 10 S Version 1709 and Later Upgrade & Servicing Drivers for testing",
+    "Windows 10 S Version 1803 and Later Servicing Drivers",
+    "Windows 10 S Version 1803 and Later Upgrade & Servicing Drivers",
+    "Windows 10 S, version 1809 and later, Servicing Drivers",
+    "Windows 10 S, version 1809 and later, Upgrade & Servicing Drivers",
+    "Windows 10 S, version 1903 and later, Servicing Drivers",
+    "Windows 10 S, version 1903 and later, Upgrade & Servicing Drivers",
+    "Windows 10 S, Vibranium and later, Servicing Drivers",
+    "Windows 10 S, Vibranium and later, Upgrade & Servicing Drivers",
+ 
+    
+    # Weitere veraltete Sicherheitstools
+    "Microsoft Online Services Sign-In Assistant",
+    
+    # Verschiedene Legacy-Tools
+    "CAPICOM", "Compute Cluster Pack", "Device Health", 
+    "Dictionary Updates for Microsoft IMEs", "New Dictionaries for Microsoft IMEs",
+    "Windows Dictionary Updates","Windows Safe OS Dynamic Update", "Search Enhancement Pack"
+)
+
+# Verbindung zu WSUS (lokal, kein SSL, Port 8530)
+[void][reflection.assembly]::LoadWithPartialName('Microsoft.UpdateServices.Administration')
+$wsus = [Microsoft.UpdateServices.Administration.AdminProxy]::GetUpdateServer($env:COMPUTERNAME.$env:USERDNSDOMAIN" $true, 8531)
+
+# Funktion: Bestimme den Grund für Ablehnung
+function Get-DeclineReason {
+    param($update)
+    if ($update.IsBeta) { return "Beta" }
+    if ($update.IsSuperseded) { return "Superseded" }
+    foreach ($pt in $update.ProductTitles) {
+        foreach ($prod in $productsToDecline) {
+            if ($pt.IndexOf($prod, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
+                return $prod
+            }
+        }
+    }
+    return $null
+}
+
+# Updates laden
+Write-Host "Updates werden geladen..."
+$scope = New-Object Microsoft.UpdateServices.Administration.UpdateScope
+$scope.ExcludedInstallationStates = [Microsoft.UpdateServices.Administration.UpdateInstallationStates]::NotApplicable
+$updates = $wsus.GetUpdates($scope) | Where-Object { -not $_.IsDeclined }
+Write-Host "$($updates.Count) Updates gefunden.`n"
+
+# Gruppierung vorbereiten: Dictionary mit Listen je Ablehnungsgrund
+$groupedUpdates = @{}
+
+foreach ($update in $updates) {
+    $reason = Get-DeclineReason -update $update
+    if ($reason) {
+        if (-not $groupedUpdates.ContainsKey($reason)) {
+            $groupedUpdates[$reason] = @()
+        }
+        $groupedUpdates[$reason] += $update
+    }
+}
+
+# Gruppenweise Ablehnen und Ausgabe mit Farbe
+$totalDeclined = 0
+$totalFailed = 0
+
+foreach ($group in $groupedUpdates.Keys) {
+    Write-Host -ForegroundColor Cyan "`n=== $group ====================================================================================================="
+    foreach ($update in $groupedUpdates[$group]) {
         try {
-            $wsus = [Microsoft.UpdateServices.Administration.AdminProxy]::GetUpdateServer($WSUSServer, $UseSSL, $Port)
-            Write-Log "Verbindung zum WSUS-Server erfolgreich hergestellt" "SUCCESS"
+            $update.Decline()
+
+            # Formatieren
+            $formatResult = Format-TitleShort -title $update.Title -kbArticles $update.KnowledgebaseArticles
+            $shortTitle = $formatResult.Title
+            $kb = $formatResult.KB
+
+            # Ausgabe
+            Write-Host "[x] " -Foregroundcolor Red -NoNewline
+            Write-Host "[$($group)]" -Foregroundcolor Cyan -NoNewline
+            if ($kb) {
+                Write-Host -NoNewline " $shortTitle "
+                Write-Host "($kb)" -Foregroundcolor Yellow
+            } else {
+                Write-Host " $shortTitle "
+            }
+            $totalDeclined++
         }
         catch {
-            Write-Log "Verbindung zum WSUS-Server fehlgeschlagen: $($_.Exception.Message)" "ERROR"
-            throw
+            Write-Host "  FEHLER bei '$($update.Title)'"
+            $totalFailed++
         }
-        
-        # Updates abrufen
-        Write-Log "Lade Updates vom Server..." "INFO"
-        $allUpdates = $wsus.GetUpdates()
-        $pendingUpdates = $allUpdates | Where-Object { $_.IsDeclined -eq $false }
-        
-        Write-Log "Gefunden: $($allUpdates.Count) Updates gesamt, $($pendingUpdates.Count) noch nicht abgelehnt" "INFO"
-        
-        # Updates verarbeiten
-        $declinedCount = 0
-        $processedCount = 0
-        
-        foreach ($update in $pendingUpdates) {
-            $processedCount++
-            $shouldDecline = $false
-            $declineReason = ""
-            
-            # Progress anzeigen
-            if ($processedCount % 100 -eq 0) {
-                Write-Progress -Activity "Updates verarbeiten" -Status "Update $processedCount von $($pendingUpdates.Count)" -PercentComplete (($processedCount / $pendingUpdates.Count) * 100)
-            }
-            
-            # 1. Überprüfung: Abgelöste Updates
-            if ($update.IsSuperseded) {
-                $shouldDecline = $true
-                $declineReason = "Veraltetes Update (Superseded)"
-            }
-            # 2. Überprüfung: Beta Updates
-            elseif ($update.IsBeta) {
-                $shouldDecline = $true
-                $declineReason = "Beta Update"
-            }
-            # 3. Überprüfung: Produkt-Titel (nur wenn noch nicht zum Ablehnen markiert)
-            elseif ($update.ProductTitles) {
-                foreach ($productTitle in $update.ProductTitles) {
-                    $matchedProduct = $declineConfig.Products | Where-Object { $productTitle -match [regex]::Escape($_) }
-                    if ($matchedProduct) {
-                        $shouldDecline = $true
-                        $declineReason = "Veraltetes Produkt: $matchedProduct (in '$productTitle')"
-                        break
-                    }
-                }
-            }
-            
-            # 4. Überprüfung: Titel-Muster (nur wenn noch nicht zum Ablehnen markiert)
-                if (-not $shouldDecline -and $update.Title) {
-                    # Spezielle Behandlung für Language Packs (alle Arten)
-                    if ($update.Title -match 'LanguageFeatureOnDemand' -or 
-                        $update.Title -match 'Language Pack' -or 
-                        $update.Title -match 'Language Interface Pack' -or
-                        $update.Title -match '_LP' -or 
-                        $update.Title -match '_LIP') {
-                        # Überprüfen ob es sich um de-DE oder en-US handelt
-                        if ($update.Title -notmatch '\[de-DE\]' -and $update.Title -notmatch '\[en-US\]') {
-                            $shouldDecline = $true
-                            $declineReason = "Language Pack: Unerwünschte Sprache (nur de-DE und en-US erlaubt)"
-                        }
-                    }
-                    # Normale Titel-Muster Überprüfung (Language Pack Muster ausschließen, da bereits oben behandelt)
-                    else {
-                        foreach ($pattern in $declineConfig.TitlePatterns) {
-                            # Language Pack Muster überspringen, da bereits oben behandelt
-                            if ($pattern -in @('_LP', '_LIP', 'Language Interface Pack', 'Language Pack')) {
-                                continue
-                            }
-                
-                            if ($update.Title -match [regex]::Escape($pattern)) {
-                                $shouldDecline = $true
-                                $declineReason = "Unerwünschtes Muster: $pattern"
-                                break
-                            }
-                        }
-                    }
-                }
-            
+    }
+    Write-Host ""
+}
 
-            # Update ablehnen
-            if ($shouldDecline) {
-                if ($PSCmdlet.ShouldProcess($update.Title, "Update ablehnen")) {
-                    try {
-                        $update.Decline()
-                        $declinedCount++
-                        Write-Log "Abgelehnt: $($update.Title)" "SUCCESS"
-                        Write-Log "    Grund: $declineReason" "INFO"
-                    }
-                    catch {
-                        Write-Log "Fehler beim Ablehnen von '$($update.Title)': $($_.Exception.Message)" "ERROR"
-                    }
-                }
-                else {
-                    Write-Log "SIMULATION: Würde ablehnen - $($update.Title)" "WARNING"
-                    Write-Log "  Grund: $declineReason" "INFO"
-                    $declinedCount++
-                }
-            }
-        }
-        
-        Write-Progress -Activity "Updates verarbeiten" -Completed
-        Write-Log "Cleanup abgeschlossen" "SUCCESS"
-        Write-Log "Verarbeitet: $processedCount Updates, Abgelehnt: $declinedCount Updates" "SUCCESS"
-        Write-Log "======= WSUS Cleanup beendet =======" "INFO"
-        Write-Log "" "INFO"  # Leerzeile für bessere Trennung zwischen Läufen
-        
-    }
-    catch {
-        Write-Log "Kritischer Fehler: $($_.Exception.Message)" "ERROR"
-        Write-Log "Stack Trace: $($_.Exception.StackTrace)" "ERROR"
-        exit 1
-    }
+# Abschluss
+Write-Host "Fertig."
+Write-Host "Abgelehnt: $totalDeclined"
+if ($totalFailed -gt 0) {
+    Write-Host "Fehler: $totalFailed"
 }
-# Script ausführen
-try {
-    Start-WSUSCleanup
-}
-catch {
-    Write-Log "Unerwarteter Fehler: $($_.Exception.Message)" "ERROR"
-    exit 1
-}
+
+
+# $updates.ProductTitles | Sort-Object -Unique
