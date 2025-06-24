@@ -5,7 +5,7 @@ function Format-TitleShort {
     param(
         [string]$title,
         [string[]]$kbArticles,
-        [int]$maxLen = 180
+        [int]$maxLen = 100
     )
 
     # Titel als String sicherstellen
