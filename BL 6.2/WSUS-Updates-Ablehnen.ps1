@@ -339,6 +339,49 @@ $productsToDecline = @(
     "Windows GDR-Dynamic Update"                                               # GDR Dynamic Updates - bypassen WSUS-Kontrolle
 )
 
+function Format-TitleShort {
+    param(
+        [string]$title,
+        [string[]]$kbArticles,
+        [int]$maxLen = 160
+    )
+
+    # Titel als String sicherstellen
+    $title = [string]$title
+
+    # KB-Nummer extrahieren aus $kbArticles
+    $kb = ""
+    if ($kbArticles -and $kbArticles.Count -gt 0) {
+        $kb = "KB" + $kbArticles[0]
+    }
+
+    # KB-Nummer (inkl. Klammern) aus dem Titel entfernen (alle Vorkommen)
+    if ($kb) {
+        # Entfernt alle Vorkommen von (KBxxxxxxx) oder KBxxxxxxx im Titel
+        $title = $title -replace '\(?KB\d+\)?', ''
+        $title = $title.Trim()
+    }
+
+    # Titel kürzen, falls zu lang
+    if ($title.Length -gt $maxLen) {
+        $title = $title.Substring(0, $maxLen).TrimEnd() + "..."
+    }
+
+    return @{ Title = $title; KB = $kb }
+}
+
+function Write-Color {
+    param(
+        [string]$text,
+        [ConsoleColor]$color
+    )
+    $origColor = $Host.UI.RawUI.ForegroundColor
+    $Host.UI.RawUI.ForegroundColor = $color
+    Write-Host -NoNewline $text
+    $Host.UI.RawUI.ForegroundColor = $origColor
+}
+
+
 # Verbindung zu WSUS (lokal, kein SSL, Port 8530)
 [void][reflection.assembly]::LoadWithPartialName('Microsoft.UpdateServices.Administration')
 $wsus = [Microsoft.UpdateServices.Administration.AdminProxy]::GetUpdateServer($env:COMPUTERNAME, $false, 8530)
@@ -350,144 +393,204 @@ $wsus = [Microsoft.UpdateServices.Administration.AdminProxy]::GetUpdateServer($e
 # Funktion: Bestimme den Grund für Ablehnung (KORRIGIERTE VERSION)
 function Get-DeclineReason {
     param($update)
-
-    # Liste erlaubter Sprachcodes (sowohl klein als auch groß geschrieben)
-    $allowedLanguages = @('de-de', 'en-us', 'en-gb', 'DE-DE', 'EN-US', 'EN-GB')
     
-    # Erlaubte Sprachbegriffe (für Erkennung ohne Codes)
-    $allowedLanguageWords = @('German', 'English', 'Deutsch')
-
-    # Verbotene Sprachbegriffe (häufige Sprachen ohne Codes)
-    $forbiddenLanguageWords = @(
+    # Frühe Prüfungen
+    if ($update.IsBeta) { return "Beta" }
+    if ($update.IsSuperseded) { return "Superseded" }
+    
+    # Prüfe Produkttitel auf Ablehnungsgründe
+    if (Get-Variable -Name "productsToDecline" -Scope Global -ErrorAction SilentlyContinue) {
+        foreach ($pt in $update.ProductTitles) {
+            foreach ($prod in $productsToDecline) {
+                if ($pt.IndexOf($prod, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
+                    return $prod
+                }
+            }
+        }
+    }
+    
+    # Sprachprüfung - kombinierter Text
+    $allText = $update.Title + " " + $update.Description + " " + ($update.ProductTitles -join " ")
+    
+    # Erlaubte Sprachen (Codes und Begriffe)
+    $allowedPatterns = @(
+        'de-de', 'en-us', 'en-gb',           # Sprachcodes
+        '\bGerman\b', '\bEnglish\b', '\bDeutsch\b'  # Sprachbegriffe
+    )
+    
+    # Verbotene Sprachen
+    $forbiddenPatterns = @(
         'French', 'Spanish', 'Italian', 'Portuguese', 'Dutch', 'Polish',
         'Russian', 'Chinese', 'Japanese', 'Korean', 'Arabic', 'Hebrew',
         'Czech', 'Hungarian', 'Swedish', 'Norwegian', 'Danish', 'Finnish',
-        'Turkish', 'Greek', 'Bulgarian', 'Romanian', 'Croatian', 'Slovak',
-        'Slovenian', 'Estonian', 'Latvian', 'Lithuanian', 'Ukrainian',
-        'Français', 'Español', 'Italiano', 'Português', 'Nederlands',
-        'Polski', 'Русский', '中文', '日本語', '한국어', 'العربية'
+        'Turkish', 'Greek'
     )
-
-    # Extrahiere alle Sprachcodes aus Titel und ProductTitles (verbesserte Regex)
-    $allText = $update.Title + " " + ($update.ProductTitles -join " ")
-    $languageMatches = [regex]::Matches($allText, '\b[a-zA-Z]{2}-[a-zA-Z]{2}\b') | ForEach-Object { $_.Value }
-
-    # Prüfe, ob "Language" im Titel oder in den Produkttiteln vorkommt
-    $containsLanguage = ($allText -match "Language") -or ($allText -match "Sprachpaket")
-
-    # Prüfe auf verbotene Sprachbegriffe
-    $containsForbiddenLanguage = $false
-    foreach ($forbiddenWord in $forbiddenLanguageWords) {
-        if ($allText -match [regex]::Escape($forbiddenWord)) {
-            $containsForbiddenLanguage = $true
-            break
-        }
-    }
-
-    # Finde nicht erlaubte Sprachcodes
-    $disallowedLanguageFound = $languageMatches | Where-Object { $_ -notin $allowedLanguages }
-
-    # KORRIGIERT: Wenn es ein Sprachpaket ist UND keine erlaubte Sprache enthält → ABLEHNEN
-    if ($containsLanguage) {
-        # Prüfe, ob deutsche oder englische Sprache enthalten ist
-        $hasAllowedLanguage = ($allText -match '(?i)(de-DE|en-US|en-GB)') -or
-                             ($allText -match '(?i)(German|English|Deutsch)')
+    
+    # Prüfe auf Sprachen (nur wenn Sprachbezug erkannt wird)
+    if ($allText -match '(?i)(Language|Sprachpaket|\b[a-zA-Z]{2}-[a-zA-Z]{2}\b|German|English|French|Spanish|Italian)') {
         
-        if (-not $hasAllowedLanguage) {
-            return "Nicht erlaubte Sprache (Sprachpaket)"
+        # Suche erlaubte Sprachen
+        $hasAllowedLanguage = $false
+        foreach ($pattern in $allowedPatterns) {
+            if ($allText -match "(?i)$pattern") {
+                $hasAllowedLanguage = $true
+                break
+            }
         }
-    }
-
-    # Wenn verbotene Sprachbegriffe gefunden → Ablehnen
-    if ($containsForbiddenLanguage) {
-        return "Nicht erlaubte Sprache (Sprachbegriff)"
-    }
-
-    # Wenn nicht erlaubte Sprachcodes gefunden → Ablehnen
-    if ($disallowedLanguageFound) {
-        $foundCodes = $disallowedLanguageFound -join ", "
-        return "Nicht erlaubte Sprache ($foundCodes)"
-    }
-
-    # Weitere bestehende Prüfpunkte (unverändert)
-    if ($update.IsBeta) { return "Beta" }
-    if ($update.IsSuperseded) { return "Superseded" }
-
-    # Prüfe Produkttitel auf Ablehnungsgründe
-    foreach ($pt in $update.ProductTitles) {
-        foreach ($prod in $productsToDecline) {
-            if ($pt.IndexOf($prod, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
-                return $prod
+        
+        # Wenn keine erlaubte Sprache gefunden → prüfe auf verbotene
+        if (-not $hasAllowedLanguage) {
+            foreach ($pattern in $forbiddenPatterns) {
+                if ($allText -match "(?i)\b$pattern\b") {
+                    return "Nicht erlaubte Sprache ($pattern)"
+                }
             }
         }
     }
-
-    # Wenn kein Ablehnungsgrund gefunden, Update erlauben
+    
+    # Kein Ablehnungsgrund gefunden
     return $null
 }
 
-
-# Updates laden
-Write-Host "Updates werden geladen..."
-$scope = New-Object Microsoft.UpdateServices.Administration.UpdateScope
-$scope.ExcludedInstallationStates = [Microsoft.UpdateServices.Administration.UpdateInstallationStates]::NotApplicable
-$updates = $wsus.GetUpdates($scope) | Where-Object { -not $_.IsDeclined }
-Write-Host "$($updates.Count) Updates gefunden.`n"
-
-# Gruppierung vorbereiten: Dictionary mit Listen je Ablehnungsgrund
-$groupedUpdates = @{}
-
-foreach ($update in $updates) {
-    $reason = Get-DeclineReason -update $update
-    if ($reason) {
-        if (-not $groupedUpdates.ContainsKey($reason)) {
-            $groupedUpdates[$reason] = @()
-        }
-        $groupedUpdates[$reason] += $update
+function Get-SimplifiedReasonForCSV {
+    param($reason)
+    
+    if ($reason -eq "Beta") { return "Beta" }
+    if ($reason -eq "Superseded") { return "Abgeloest" }
+    if ($reason -match "^Nicht erlaubte Sprache") { return "Sprache" }
+    
+    # Produktablehnungen
+    if ($reason -ne "Beta" -and $reason -ne "Superseded" -and $reason -notmatch "^Nicht erlaubte Sprache") {
+        return "Unerwuenschtes_Produkt"
     }
+    
+    return "Sonstige"
 }
 
-# Gruppenweise Ablehnen und Ausgabe mit Farbe
-$totalDeclined = 0
-$totalFailed = 0
+function Get-SafeFileName {
+    param($fileName)
+    # Ersetze ungültige Zeichen durch Unterstriche
+    $invalidChars = [IO.Path]::GetInvalidFileNameChars() + [IO.Path]::GetInvalidPathChars()
+    $safeFileName = $fileName
+    foreach ($char in $invalidChars) {
+        $safeFileName = $safeFileName -replace [regex]::Escape($char), '_'
+    }
+    return $safeFileName
+}
 
-foreach ($group in $groupedUpdates.Keys) {
-    Write-Host -ForegroundColor Cyan "`n=== $group ====================================================================================================="
-    foreach ($update in $groupedUpdates[$group]) {
-        try {
-            $update.Decline()
+# Timer-Schleife starten
+while ($true) {
+    Write-Host "=== Durchlauf um $(Get-Date -Format 'HH:mm:ss') ===" -ForegroundColor Green
 
-            # Formatieren
-            $formatResult = Format-TitleShort -title $update.Title -kbArticles $update.KnowledgebaseArticles
-            $shortTitle = $formatResult.Title
-            $kb = $formatResult.KB
-
-            # Ausgabe
-            Write-Host "[x] " -Foregroundcolor Red -NoNewline
-            Write-Host "[$($group)]" -Foregroundcolor Cyan -NoNewline
-            if ($kb) {
-                Write-Host -NoNewline " $shortTitle "
-                Write-Host "($kb)" -Foregroundcolor Yellow
-            } else {
-                Write-Host " $shortTitle "
+    # Updates laden
+    Write-Host "Updates werden geladen..."
+    $scope = New-Object Microsoft.UpdateServices.Administration.UpdateScope
+    $scope.ExcludedInstallationStates = [Microsoft.UpdateServices.Administration.UpdateInstallationStates]::NotApplicable
+    $updates = $wsus.GetUpdates($scope) | Where-Object { -not $_.IsDeclined }
+    Write-Host "$($updates.Count) Updates gefunden.`n"
+    
+    # Gruppierung vorbereiten: Dictionary mit Listen je Ablehnungsgrund
+    $groupedUpdates = @{}
+    foreach ($update in $updates) {
+        $reason = Get-DeclineReason -update $update
+        if ($reason) {
+            if (-not $groupedUpdates.ContainsKey($reason)) {
+                $groupedUpdates[$reason] = @()
             }
-            $totalDeclined++
-        }
-        catch {
-            Write-Host "  FEHLER bei '$($update.Title)'"
-            $totalFailed++
+            $groupedUpdates[$reason] += $update
         }
     }
-    Write-Host ""
+    
+    # Log-Verzeichnis erstellen
+    $logBasePath = "G:\WSUS\logs"
+    if (-not (Test-Path $logBasePath)) {
+        New-Item -Path $logBasePath -ItemType Directory -Force | Out-Null
+    }
+    $dateString = Get-Date -Format "yyyyMMdd"
+    
+    # Gruppenweise Ablehnen und Ausgabe mit Farbe + Logging
+    $totalDeclined = 0
+    $totalFailed = 0
+    
+    foreach ($group in $groupedUpdates.Keys) {
+        Write-Host -ForegroundColor Cyan "`n=== $group ====================================================================================================="
+        
+        # Log-Ordner für diese Gruppe erstellen (mit vereinfachtem Namen für CSV)
+        $simplifiedReason = Get-SimplifiedReasonForCSV -reason $group
+        $safeGroupName = Get-SafeFileName -fileName $simplifiedReason
+        $groupLogPath = Join-Path $logBasePath $safeGroupName
+        if (-not (Test-Path $groupLogPath)) {
+            New-Item -Path $groupLogPath -ItemType Directory -Force | Out-Null
+        }
+        
+        # CSV-Datei für heute
+        $csvFileName = "${dateString}_${safeGroupName}.csv"
+        $csvFilePath = Join-Path $groupLogPath $csvFileName
+        
+        # CSV-Header erstellen falls Datei nicht existiert
+        if (-not (Test-Path $csvFilePath)) {
+            "Zeitstempel,Titel,KB-Artikel,Beschreibung,Produkttitel,Größe" | Out-File -FilePath $csvFilePath -Encoding UTF8
+        }
+        
+        foreach ($update in $groupedUpdates[$group]) {
+            try {
+                $update.Decline()
+                
+                # Formatieren für Ausgabe
+                $formatResult = Format-TitleShort -title $update.Title -kbArticles $update.KnowledgebaseArticles
+                $shortTitle = $formatResult.Title
+                $kb = $formatResult.KB
+                
+                # CSV-Daten vorbereiten (Anführungszeichen und Kommas escapen)
+                $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+                $csvTitle = $update.Title -replace '"', '""'
+                $csvDescription = ""
+                if ($update.Description) {
+                    $csvDescription = ($update.Description -replace '"', '""' -replace "`r`n", " " -replace "`n", " ")
+                    if ($csvDescription.Length -gt 200) {
+                        $csvDescription = $csvDescription.Substring(0, 200)
+                    }
+                }
+                $csvProductTitles = ($update.ProductTitles -join "; ") -replace '"', '""'
+                $csvKB = ($update.KnowledgebaseArticles -join "; ")
+                $csvSize = $update.Size
+                
+                # In CSV schreiben
+                $csvLine = "`"$timestamp`",`"$csvTitle`",`"$csvKB`",`"$csvDescription`",`"$csvProductTitles`",`"$csvSize`""
+                Add-Content -Path $csvFilePath -Value $csvLine -Encoding UTF8
+                
+                # Konsolen-Ausgabe (unverändert)
+                Write-Host "[x] " -Foregroundcolor Red -NoNewline
+                Write-Host "[$($group)]" -Foregroundcolor Cyan -NoNewline
+                if ($kb) {
+                    Write-Host -NoNewline " $shortTitle "
+                    Write-Host "($kb)" -Foregroundcolor Yellow
+                } else {
+                    Write-Host " $shortTitle "
+                }
+                $totalDeclined++
+            }
+            catch {
+                Write-Host "  FEHLER bei '$($update.Title)'" -ForegroundColor Red
+                
+                # Auch Fehler loggen
+                $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+                $errorLine = "`"$timestamp`",`"FEHLER: $($update.Title -replace '"', '""')`",`"`",`"$($_.Exception.Message -replace '"', '""')`",`"`",`"`""
+                Add-Content -Path $csvFilePath -Value $errorLine -Encoding UTF8
+                
+                $totalFailed++
+            }
+        }
+        Write-Host ""
+    }
+    
+    # Abschluss
+    Write-Host "Fertig."
+    Write-Host "Abgelehnt: $totalDeclined"
+    if ($totalFailed -gt 0) {
+        Write-Host "Fehler: $totalFailed"
+    }
+    
+    Write-Host "Warte 60 Sekunden..." -ForegroundColor Yellow
+    Start-Sleep -Seconds 60
 }
-
-# Abschluss
-Write-Host "Fertig."
-Write-Host "Abgelehnt: $totalDeclined"
-if ($totalFailed -gt 0) {
-    Write-Host "Fehler: $totalFailed"
-}
-
-
-Write-Host -Foregroundcolor Green "`n`nVerbleibende Updates nach Kategorien:`n"
-($wsus.GetUpdates($scope) | Where-Object { -not $_.IsDeclined }).ProductTitles | Sort-Object -Unique
