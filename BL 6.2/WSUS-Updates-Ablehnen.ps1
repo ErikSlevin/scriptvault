@@ -1,243 +1,419 @@
 #Requires -Version 5.1
 #Requires -RunAsAdministrator
 
-function Format-TitleShort {
-    param(
-        [string]$title,
-        [string[]]$kbArticles,
-        [int]$maxLen = 100
-    )
-
-    # Titel als String sicherstellen
-    $title = [string]$title
-
-    # KB-Nummer extrahieren aus $kbArticles
-    $kb = ""
-    if ($kbArticles -and $kbArticles.Count -gt 0) {
-        $kb = "KB" + $kbArticles[0]
-    }
-
-    # KB-Nummer (inkl. Klammern) aus dem Titel entfernen (alle Vorkommen)
-    if ($kb) {
-        # Entfernt alle Vorkommen von (KBxxxxxxx) oder KBxxxxxxx im Titel
-        $title = $title -replace '\(?KB\d+\)?', ''
-        $title = $title.Trim()
-    }
-
-    # Titel kürzen, falls zu lang
-    if ($title.Length -gt $maxLen) {
-        $title = $title.Substring(0, $maxLen).TrimEnd() + "..."
-    }
-
-    return @{ Title = $title; KB = $kb }
-}
-
 $productsToDecline = @(
-    # Windows Server-Produkte
-    "Server 2003", "Windows Server 2008", "Windows Server 2012", "Windows Server 2019",
-    "Windows Server 2022", "Windows Server 2025",
-    "Small Business Server", "Small Business Server 2011", "Business Server 2015",
-    "SharePoint Server", "SharePoint Server 2016", "SharePoint Server 2019",
-    "System Center",
-    "Windows Essential Business Server 2008", "Windows Essential Business Server 2008 Setup Updates",
-    "Windows Essential Business Server Preinstallation Tools",
-    "Windows Server Technical Preview Language Packs",
-    "Windows Server Solutions Best Practices Analyzer 1.0", "Microsoft Monitoring Agent",
-    "Windows Server Drivers",
-    "Windows Server 2008 R2",
-    "Windows Server 2012 R2",
-    "Windows Server 2012 R2 Drivers",
+    # ===== VERALTETE WINDOWS-BETRIEBSSYSTEME =====
+    "Windows 2000",                                                              # End-of-Life seit 2010
+    "Windows XP",                                                                # End-of-Life seit 2014
+    "Windows XP 64-Bit Edition Version 2003",                                    # End-of-Life seit 2015
+    "Windows Vista",                                                             # End-of-Life seit 2017
+    "Windows 7",                                                                 # End-of-Life seit 2020
+    "Windows 8",                                                                 # End-of-Life seit 2016
+    "Windows 8.1",                                                               # End-of-Life seit 2023
+    "Windows 8.1 Drivers",                                                       # Treiber für nicht mehr unterstützte Version
+    "Windows RT",                                                                # Tablet-Version, nicht mehr entwickelt
+    "Windows RT 8.1",                                                            # Tablet-Version, nicht mehr entwickelt
+    "Windows Embedded",                                                          # Embedded-Versionen nicht in Umgebung
+    "Windows Embedded Standard 7",                                               # Embedded-Version, End-of-Life
+    "Windows 8 Embedded",                                                        # Embedded-Version, End-of-Life
+    "Windows 10 LTSB",                                                           # Long Term Servicing Branch - spezielle Edition
+    "Windows Insider Pre-Release",                                               # Preview-Builds für Testzwecke
     
-    # Exchange Server
-    "Exchange Server 2000", "Exchange 2000 Server", "Exchange Server 2007",
-    "Exchange Server 2010", "Exchange Server 2013", "Exchange Server 2016", "Exchange Server 2019",
-    "Antigen for Exchange/SMTP",
+    # Windows 10 S Edition (Education, nicht Business)
+    "Windows 10 S and Later Servicing Drivers",                                 # Windows 10 S - Education Edition
+    "Windows 10 S Version 1709 and Later Servicing Drivers for testing",        # Windows 10 S - Test-Treiber
+    "Windows 10 S Version 1709 and Later Upgrade & Servicing Drivers for testing", # Windows 10 S - Test-Upgrade-Treiber
+    "Windows 10 S Version 1803 and Later Servicing Drivers",                    # Windows 10 S - Servicing-Treiber
+    "Windows 10 S Version 1803 and Later Upgrade & Servicing Drivers",          # Windows 10 S - Upgrade-Treiber
+    "Windows 10 S, version 1809 and later, Servicing Drivers",                  # Windows 10 S - 1809 Servicing
+    "Windows 10 S, version 1809 and later, Upgrade & Servicing Drivers",        # Windows 10 S - 1809 Upgrade
+    "Windows 10 S, version 1903 and later, Servicing Drivers",                  # Windows 10 S - 1903 Servicing
+    "Windows 10 S, version 1903 and later, Upgrade & Servicing Drivers",        # Windows 10 S - 1903 Upgrade
+    "Windows 10 S, Vibranium and later, Servicing Drivers",                     # Windows 10 S - Vibranium Servicing
+    "Windows 10 S, Vibranium and later, Upgrade & Servicing Drivers",           # Windows 10 S - Vibranium Upgrade
+    "Windows - Client S, version 21H2 and later, Servicing Drivers",            # Windows 10 S - 21H2 Servicing
+    "Windows - Client S, version 21H2 and later, Upgrade & Servicing Drivers",  # Windows 10 S - 21H2 Upgrade
+
+    # ===== VERALTETE/NICHT VERWENDETE WINDOWS SERVER-VERSIONEN =====
+    "Server 2003",                                                              # End-of-Life seit 2015
+    "Windows Server 2008",                                                      # End-of-Life seit 2020
+    "Windows Server 2008 R2",                                                   # End-of-Life seit 2020
+    "Windows Server 2012",                                                      # End-of-Life Januar 2023
+    "Windows Server 2012 R2",                                                   # End-of-Life Oktober 2023
+    "Windows Server 2012 R2 Drivers",                                           # Treiber für nicht mehr unterstützte Version
+    "Windows Server 2022",                                                      # Neuere Version, nicht in Umgebung
+    "Windows Server 2025",                                                      # Zukünftige Version, nicht in Umgebung
+    "Windows Server Drivers",                                                   # Allgemeine alte Server-Treiber
+    "Windows Server, version 1903 and later",                                   # Semi-Annual Channel (nicht LTSC)
+    "Windows Server Manager – WSUS Dynamic Installer",                          # Spezielle Installer-Komponente
+    "Microsoft Server operating system-21H2",                                   # Semi-Annual Channel Version
+    "Server 2022 Hotpatch Category",                                            # Hotpatch für Server 2022 (nicht in Umgebung)
+    "Windows Server Technical Preview Language Packs",                          # Preview-Version Sprachpakete
     
-    # SQL Server
-    "SQL Server 2000", "SQL Server 2005", "SQL Server 2008", "SQL Server 2012", "SQL Server 2014",
-    "SQL Server 2017", "Microsoft SQL Server 2019",
-    "Microsoft SQL Server Management Studio v17",
-    "SQL Server Feature Pack",
-    "Microsoft SQL Server 2016",
-    "Microsoft SQL Server 2017",
+    # Business Server-Editionen
+    "Small Business Server",                                                    # End-of-Life seit 2020
+    "Small Business Server 2011",                                               # End-of-Life seit 2020
+    "Business Server 2015",                                                     # End-of-Life
+    "Windows Essential Business Server 2008",                                   # End-of-Life
+    "Windows Essential Business Server 2008 Setup Updates",                     # End-of-Life Setup-Updates
+    "Windows Essential Business Server Preinstallation Tools",                  # End-of-Life Preinstallation-Tools
+    "Windows Server Solutions Best Practices Analyzer 1.0",                     # Veraltetes Analyse-Tool
+
+    # ===== SHAREPOINT SERVER =====
+    "SharePoint Server",                                                        # Alle SharePoint Server-Versionen
+    "SharePoint Server 2016",                                                   # SharePoint Server 2016
+    "SharePoint Server 2019",                                                   # SharePoint Server 2019
+    "SharePoint Server 2019/Office Online Server",                              # SharePoint 2019 mit Office Online
+
+    # ===== EXCHANGE SERVER =====
+    "Exchange 2000 Server",                                                     # End-of-Life seit 2009
+    "Exchange Server 2000",                                                     # End-of-Life seit 2009
+    "Exchange Server 2007",                                                     # End-of-Life seit 2017
+    "Exchange Server 2010",                                                     # End-of-Life seit 2020
+    "Exchange Server 2013",                                                     # End-of-Life seit 2023
+    "Exchange Server 2016",                                                     # Nicht in Umgebung
+    "Exchange Server 2019",                                                     # Nicht in Umgebung
+    "Antigen for Exchange/SMTP",                                                # Veraltete Exchange-Sicherheitssoftware
+
+    # ===== SQL SERVER =====
+    "SQL Server 2000",                                                          # End-of-Life seit 2013
+    "SQL Server 2005",                                                          # End-of-Life seit 2016
+    "SQL Server 2008",                                                          # End-of-Life seit 2019
+    "SQL Server 2012",                                                          # End-of-Life seit 2022
+    "SQL Server 2014",                                                          # End-of-Life Oktober 2024
+    "Microsoft SQL Server 2016",                                                # Nicht in Umgebung
+    "SQL Server 2017",                                                          # Nicht in Umgebung
+    "Microsoft SQL Server 2017",                                                # Nicht in Umgebung
+    "Microsoft SQL Server 2019",                                                # Nicht in Umgebung
+    "Microsoft SQL Server Management Studio v17",                               # Spezifische SSMS-Version
+    "SQL Server Feature Pack",                                                  # SQL Server Feature Pack (alle Versionen)
+
+    # ===== OFFICE-PRODUKTE UND KOMPONENTEN =====
+    "Office XP",                                                                # End-of-Life seit 2008
+    "Office 2002/XP",                                                           # End-of-Life seit 2008
+    "Office 2003",                                                              # End-of-Life seit 2014
+    "Office 2007",                                                              # End-of-Life seit 2017
+    "Office 2010",                                                              # End-of-Life seit 2020
+    "Office 2013",                                                              # End-of-Life seit 2023
+    "Office 365",                                                               # Alte Bezeichnung, jetzt Microsoft 365
+    "Microsoft 365",                                                            # Cloud-Version, separat verwaltet
+    "Microsoft 365 Apps/Office 2019/Office LTSC",                               # Neuere Versionen, separat verwaltet
+    "Office Live Add-in",                                                       # Veraltetes Online-Add-in
     
-    # BizTalk Server
-    "BizTalk Server 2002", "BizTalk Server 2006R2", "BizTalk Server 2009", "BizTalk Server 2013",
-    
-    # Host Integration Server
-    "Host Integration Server 2000", "Host Integration Server 2004", "Host Integration Server 2006",
-    "Host Integration Server 2009", "Host Integration Server 2010",
-    
-    # Kommunikations-Server
-    "Microsoft Lync Server", "Microsoft Lync Server 2010", "Microsoft Lync 2010", "Microsoft Lync 2013",
-    "Office Communicator Server", "Office Communicator Server 2007", "Office Communications Server",
-    "Office Communications Server 2007", "Office Communicator 2007 R2", 
-    "Skype for Business", "Skype for Business 2015",
-    "Skype for Business Server 2015, SmartSetup",
-    "Skype for Business Server 2019, SmartSetup",
-    
-    # Office-Produkte (einzelne Anwendungen)
-    "Office XP", "Office 2003", "Office 2007", "Office 2010", "Office 2013", "Office 365",
-    "Microsoft 365", "Office 2002/XP", "Office Live Add-in",
-    "Microsoft 365 Apps/Office 2019/Office LTSC",
+    # Einzelne Office-Anwendungen (alte Versionen)
+    "Access",                                                                   # Allgemeine Access-Updates (alle Versionen)
+    "Access 2002",                                                              # End-of-Life
+    "Excel",                                                                    # Allgemeine Excel-Updates (alle Versionen)
+    "Excel 2002",                                                               # End-of-Life
+    "Outlook",                                                                  # Allgemeine Outlook-Updates (alle Versionen)
+    "Outlook 2002",                                                             # End-of-Life
+    "Word",                                                                     # Allgemeine Word-Updates (alle Versionen)
+    "Word 2002",                                                                # End-of-Life
     
     # Publisher-Versionen
-    "Publisher", "Publisher 2000", "Publisher 2002", "Publisher 2003", "Publisher 2007",
-    "Publisher 2010", "Publisher 2013",
+    "Publisher",                                                                # Allgemeine Publisher-Updates (alle Versionen)
+    "Publisher 2000",                                                           # End-of-Life
+    "Publisher 2002",                                                           # End-of-Life
+    "Publisher 2003",                                                           # End-of-Life
+    "Publisher 2007",                                                           # End-of-Life
+    "Publisher 2010",                                                           # End-of-Life
+    "Publisher 2013",                                                           # End-of-Life
     
-    # Visio-Versionen  
-    "Visio", "Visio 2000", "Visio 2002", "Visio 2003", "Visio 2007", "Visio 2010", "Visio 2013",
+    # Visio-Versionen
+    "Visio",                                                                    # Allgemeine Visio-Updates (alle Versionen)
+    "Visio 2000",                                                               # End-of-Life
+    "Visio 2002",                                                               # End-of-Life
+    "Visio 2003",                                                               # End-of-Life
+    "Visio 2007",                                                               # End-of-Life
+    "Visio 2010",                                                               # End-of-Life
+    "Visio 2013",                                                               # End-of-Life
     
     # Project-Versionen
-    "Project", "Project 2000", "Project 2002", "Project 2003", "Project 2007", "Project 2010", "Project 2013",
+    "Project",                                                                  # Allgemeine Project-Updates (alle Versionen)
+    "Project 2000",                                                             # End-of-Life
+    "Project 2002",                                                             # End-of-Life
+    "Project 2003",                                                             # End-of-Life
+    "Project 2007",                                                             # End-of-Life
+    "Project 2010",                                                             # End-of-Life
+    "Project 2013",                                                             # End-of-Life
+
+    # ===== VISUAL STUDIO =====
+    "Visual Studio 2005",                                                       # End-of-Life seit 2016
+    "Visual Studio 2008",                                                       # End-of-Life seit 2018
+    "Visual Studio 2010",                                                       # End-of-Life seit 2020
+    "Visual Studio 2012",                                                       # End-of-Life seit 2023
+    "Visual Studio 2013",                                                       # End-of-Life seit 2024
+    "Visual Studio 2015",                                                       # End-of-Life April 2025
+
+    # ===== SYSTEM CENTER =====
+    "System Center",                                                            # Allgemeine System Center-Updates
+    "System Center 2019 - Operations Manager",                                  # SCOM 2019, nicht in Umgebung
+    "System Center 2019 - Orchestrator",                                        # System Center Orchestrator 2019
+    "System Center 2019 - Virtual Machine Manager",                             # SCVMM 2019, nicht in Umgebung
+    "System Center 2019 Data Protection Manager",                               # SCDPM 2019, nicht in Umgebung
+    "Microsoft Monitoring Agent",                                               # System Center Monitoring Agent
+
+    # ===== KOMMUNIKATIONS-SERVER =====
+    "Microsoft Lync 2010",                                                      # End-of-Life seit 2020
+    "Microsoft Lync 2013",                                                      # End-of-Life seit 2023
+    "Microsoft Lync Server",                                                    # Allgemeine Lync Server-Updates
+    "Microsoft Lync Server 2010",                                               # End-of-Life seit 2020
+    "Office Communicator 2007 R2",                                              # End-of-Life
+    "Office Communicator Server",                                               # End-of-Life
+    "Office Communicator Server 2007",                                          # End-of-Life
+    "Office Communications Server",                                             # End-of-Life
+    "Office Communications Server 2007",                                        # End-of-Life
+    "Skype for Business",                                                       # Allgemeine Skype for Business-Updates
+    "Skype for Business 2015",                                                  # Skype for Business 2015
+    "Skype for Business Server 2015, SmartSetup",                               # Skype for Business Server 2015
+    "Skype for Business Server 2019, SmartSetup",                               # Skype for Business Server 2019
+
+    # ===== BIZTALK SERVER =====
+    "BizTalk Server 2002",                                                      # End-of-Life
+    "BizTalk Server 2006R2",                                                    # End-of-Life
+    "BizTalk Server 2009",                                                      # End-of-Life
+    "BizTalk Server 2013",                                                      # End-of-Life
+
+    # ===== HOST INTEGRATION SERVER =====
+    "Host Integration Server 2000",                                             # End-of-Life
+    "Host Integration Server 2004",                                             # End-of-Life
+    "Host Integration Server 2006",                                             # End-of-Life
+    "Host Integration Server 2009",                                             # End-of-Life
+    "Host Integration Server 2010",                                             # End-of-Life
+
+    # ===== BROWSER UND WEB-TECHNOLOGIEN =====
+    "Internet Explorer",                                                        # End-of-Life Juni 2022
+    "Microsoft Edge Legacy",                                                    # Alte Edge-Version (EdgeHTML)
+    "Silverlight",                                                              # End-of-Life Oktober 2021
+    "Bing Bar",                                                                 # Veraltete Browser-Toolbar
+    "Search Enhancement Pack",                                                  # Veraltetes Such-Add-on
+
+    # ===== SICHERHEITS- UND MANAGEMENT-TOOLS =====
+    "Forefront Client Security",                                                # End-of-Life, ersetzt durch Windows Defender
+    "Forefront Endpoint Protection 2010",                                       # End-of-Life, ersetzt durch Windows Defender
+    "Forefront Identity Manager",                                               # End-of-Life
+    "Forefront Identity Manager 2010",                                          # End-of-Life
+    "Forefront Identity Manager 2010 R2",                                       # End-of-Life
+    "Forefront Protection Category",                                            # Forefront Protection-Updates
+    "Forefront Server Security Category",                                       # Forefront Server Security-Updates
+    "Forefront Threat Management Gateway, Definition Updates for HTTP Malware Inspection", # TMG Malware-Definition-Updates
+    "Forefront TMG",                                                            # Threat Management Gateway
+    "Forefront TMG MBE",                                                        # TMG Medium Business Edition
+    "Security Essentials",                                                      # Microsoft Security Essentials (ersetzt durch Windows Defender)
+    "Microsoft Advanced Threat Analytics",                                      # ATA, ersetzt durch Microsoft Defender for Identity
+    "Microsoft BitLocker Administration and Monitoring v1",                     # MBAM v1, veraltete Version
+    "OneCare Family Safety Installation",                                       # Veraltete Familienschutz-Software
     
-    # Einzelne Office-Apps (alte Versionen)
-    "Access", "Access 2002", "Outlook", "Outlook 2002", "Word", "Word 2002", "Excel", "Excel 2002",
+    # ISA Server
+    "Firewall Client for ISA Server",                                           # ISA Server Firewall Client
+    "Internet Security and Acceleration Server 2004",                           # ISA Server 2004
+    "Internet Security and Acceleration Server 2006",                           # ISA Server 2006
     
-    # Visual Studio
-    "Visual Studio 2005", "Visual Studio 2008", "Visual Studio 2010", "Visual Studio 2012",
-    "Visual Studio 2013", "Visual Studio 2015",
+    # TMG (Threat Management Gateway)
+    "Threat Management Gateway Definition Updates for Network Inspection System", # TMG Definition-Updates
+    "TMG Firewall Client",                                                      # TMG Firewall Client
+
+    # ===== VIRTUALISIERUNG =====
+    "Virtual PC",                                                               # End-of-Life, ersetzt durch Hyper-V
+    "Virtual Server",                                                           # End-of-Life, ersetzt durch Hyper-V
+    "Microsoft Application Virtualization 4.5",                                 # App-V 4.5, veraltete Version
+    "Microsoft Application Virtualization 4.6",                                 # App-V 4.6, veraltete Version
+    "Microsoft Application Virtualization 5.0",                                 # App-V 5.0, veraltete Version
+
+    # ===== .NET FRAMEWORK =====
+    ".NET 5.0",                                                                 # .NET 5.0, End-of-Life
+    "NET Core 2.1",                                                             # .NET Core 2.1, End-of-Life
+    ".NET Core 3.1",                                                            # .NET Core 3.1, End-of-Life
+
+    # ===== EXPRESSION-SUITE (WEBDESIGN-TOOLS) =====
+    "Expression Design 1",                                                      # End-of-Life
+    "Expression Design 2",                                                      # End-of-Life
+    "Expression Design 3",                                                      # End-of-Life
+    "Expression Design 4",                                                      # End-of-Life
+    "Expression Media 2",                                                       # End-of-Life
+    "Expression Media V1",                                                      # End-of-Life
+    "Expression Web 3",                                                         # End-of-Life
+    "Expression Web 4",                                                         # End-of-Life
+
+    # ===== MICROSOFT WORKS =====
+    "Microsoft Works 8",                                                        # End-of-Life
+    "Microsoft Works 9",                                                        # End-of-Life
+    "Works 6-9 Converter",                                                      # Konverter für Microsoft Works
+
+    # ===== MICROSOFT DYNAMICS CRM =====
+    "Microsoft Dynamics CRM 2011",                                              # End-of-Life
+    "Microsoft Dynamics CRM 2011 SHS",                                          # Dynamics CRM 2011 SHS
+    "Microsoft Dynamics CRM 2013",                                              # End-of-Life
+    "Microsoft Dynamics CRM 2015",                                              # End-of-Life
+    "Microsoft Dynamics CRM 2016",                                              # End-of-Life
+    "Microsoft Dynamics CRM 2016 SHS",                                          # Dynamics CRM 2016 SHS
+
+    # ===== WINDOWS LIVE =====
+    "Windows Live",                                                             # End-of-Life
+    "Windows Live Toolbar",                                                     # End-of-Life Browser-Toolbar
+
+    # ===== WINDOWS AZURE PACK =====
+    "Windows Azure Pack: Admin API",                                            # Azure Pack Admin API
+    "Windows Azure Pack: Admin Authentication Site",                            # Azure Pack Admin Authentication
+    "Windows Azure Pack: Admin Site",                                           # Azure Pack Admin Site
+    "Windows Azure Pack: Configuration Site",                                   # Azure Pack Configuration Site
+    "Windows Azure Pack: Microsoft Best Practice Analyzer",                     # Azure Pack Best Practice Analyzer
+    "Windows Azure Pack: Monitoring Extension",                                 # Azure Pack Monitoring Extension
+    "Windows Azure Pack: MySQL Extension",                                      # Azure Pack MySQL Extension
+    "Windows Azure Pack: PowerShell API",                                       # Azure Pack PowerShell API
+    "Windows Azure Pack: SQL Server Extension",                                 # Azure Pack SQL Server Extension
+    "Windows Azure Pack: Tenant API",                                           # Azure Pack Tenant API
+    "Windows Azure Pack: Tenant Authentication Site",                           # Azure Pack Tenant Authentication
+    "Windows Azure Pack: Tenant Public API",                                    # Azure Pack Tenant Public API
+    "Windows Azure Pack: Tenant Site",                                          # Azure Pack Tenant Site
+    "Windows Azure Pack: Usage Extension",                                      # Azure Pack Usage Extension
+    "Windows Azure Pack: Web App Gallery Extension",                            # Azure Pack Web App Gallery
+    "Windows Azure Pack: Web Sites",                                            # Azure Pack Web Sites
+
+    # ===== AZURE-KOMPONENTEN =====
+    "Microsoft Azure Backup Server V3 - Data Protection Manager",               # Azure Backup Server V3
+    "Microsoft Azure Edge Appliance",                                           # Azure Edge Appliance
+    "Microsoft Azure Site Recovery Provider",                                   # Azure Site Recovery Provider
+    "Azure IoT Edge for Linux on Windows Category",                             # Azure IoT Edge für Linux on Windows
+    "Azure Stack HCI",                                                          # Azure Stack HCI, nicht in Umgebung
+
+    # ===== ENTWICKLER- UND REPORTING-TOOLS =====
+    "ASP.NET Web Frameworks",                                                   # ASP.NET Web Frameworks (allgemein)
+    "Report Viewer 2005",                                                       # SQL Server Report Viewer 2005
+    "Report Viewer 2008",                                                       # SQL Server Report Viewer 2008
+    "Report Viewer 2010",                                                       # SQL Server Report Viewer 2010
+    "Microsoft StreamInsight V1.0",                                             # StreamInsight V1.0, End-of-Life
+
+    # ===== MONITORING- UND MANAGEMENT-TOOLS =====
+    "Data Protection Manager 2006",                                             # System Center DPM 2006
+    "HPC Pack 2008",                                                            # High Performance Computing Pack 2008
+    "Network Monitor 3",                                                        # Microsoft Network Monitor 3
+    "Service Bus for Windows Server 1.1",                                       # Service Bus für Windows Server
+
+    # ===== GESUNDHEITS- UND MULTIMEDIA-TOOLS =====
+    "HealthVault Connection Center",                                            # Microsoft HealthVault Connection Center
+    "HealthVault Connection Center Upgrades",                                   # HealthVault Connection Center Upgrades
+    "Microsoft Research AutoCollage 2008",                                      # AutoCollage 2008
+    "Photo Gallery Installation and Upgrades",                                  # Windows Live Photo Gallery
+
+    # ===== WINDOWS-EXTRAS UND SPIELE =====
+    "DreamScene",                                                               # Windows DreamScene (Vista Ultimate)
+    "Pokerspiel",                                                               # Windows Pokerspiel
+    'Pokerspiel "Hold Em"',                                                     # Windows Hold'Em Pokerspiel
+    "Tinker",                                                                   # Windows Tinker-Spiel
+    "Windows Ultimate Extras",                                                  # Windows Vista Ultimate Extras
+    "Writer Installation and Upgrades",                                         # Windows Live Writer
+
+    # ===== HARDWARE-SPEZIFISCHE TREIBER =====
+    "Surface Hub 2S drivers",                                                   # Surface Hub 2S Treiber
+    "Driver",                                                                   # Allgemeine Treiber-Updates
+
+    # ===== POWERSHELL =====
+    "PowerShell Preview - x64",                                                 # PowerShell Preview-Versionen
+
+    # ===== VERSCHIEDENE LEGACY-TOOLS =====
+    "Active Directory Rights Management Services Client 2.0",                   # AD RMS Client 2.0
+    "CAPICOM",                                                                  # Cryptographic API Component Object Model
+    "Compute Cluster Pack",                                                     # Windows Compute Cluster Pack
+    "Device Health",                                                            # Device Health-Updates
+    "Dictionary Updates for Microsoft IMEs",                                    # Wörterbuch-Updates für Input Method Editors
+    "New Dictionaries for Microsoft IMEs",                                      # Neue Wörterbücher für IMEs
+    "Windows Dictionary Updates",                                               # Windows Wörterbuch-Updates
+    "Windows Safe OS Dynamic Update",                                           # Windows Safe OS Dynamic Updates
+    "Microsoft Online Services Sign-In Assistant",                              # Online Services Sign-In Assistant
     
-    # Windows-Betriebssysteme
-    "Windows 2000", "Windows XP", "Windows Vista", "Windows 7", "Windows 8", "Windows 8.1", 
-    "Windows RT", "Windows Embedded",
-    "Windows XP 64-Bit Edition Version 2003",
-    "Windows Insider Pre-Release",
-    "Windows RT 8.1",
-    "Windows Embedded Standard 7",
-    "Windows 8 Embedded",
-    "Windows 8.1 Drivers",
+    # ===== DYNAMIC UPDATE-KATEGORIEN =====
+    # WICHTIG: Dynamic Updates (DU) und GDR-Dynamic Updates (GDR-DU) sind spezielle Update-Kategorien, die Microsoft für In-Place-Upgrades und Feature-Updates verwendet.
+    # Diese sollten in WSUS NICHT genehmigt werden, da sie:
+    #    1. Automatisch während Windows-Upgrades heruntergeladen werden (nicht über WSUS)
+    #    2. Können Upgrade-Probleme verursachen wenn über WSUS bereitgestellt
+    #    3. Sind für Zero-Day-Patches während Upgrades gedacht, nicht für laufende Systeme
+    #    4. Können zu unerwarteten System-Neustarts und Installationen führen
+    #    5. Umgehen normale Change-Management-Prozesse
     
-    # Browser und Web-Technologien
-    "Internet Explorer", "Microsoft Edge Legacy", "Silverlight",
-    "Bing Bar", "Search Enhancement Pack",
-    
-    # Sicherheits- und Management-Tools
-    "Forefront Identity Manager", "Forefront Identity Manager 2010", "Forefront Identity Manager 2010 R2",
-    "Forefront Client Security", "Forefront Endpoint Protection 2010",
-    "Forefront Protection Category", "Forefront Server Security Category",
-    "Forefront Threat Management Gateway, Definition Updates for HTTP Malware Inspection",
-    "Forefront TMG", "Forefront TMG MBE", "Firewall Client for ISA Server",
-    "Internet Security and Acceleration Server 2004", "Internet Security and Acceleration Server 2006",
-    "Security Essentials", "OneCare Family Safety Installation",
-    "Microsoft BitLocker Administration and Monitoring v1", "Microsoft Advanced Threat Analytics",
-    
-    # Virtualisierung
-    "Virtual PC", "Virtual Server",
-    "Microsoft Application Virtualization 4.5", "Microsoft Application Virtualization 4.6",
-    "Microsoft Application Virtualization 5.0",
-    
-    # Expression-Suite (Webdesign-Tools)
-    "Expression Design 1", "Expression Design 2", "Expression Design 3", "Expression Design 4",
-    "Expression Media 2", "Expression Media V1", "Expression Web 3", "Expression Web 4",
-    
-    # Microsoft Works
-    "Microsoft Works 8", "Microsoft Works 9", "Works 6-9 Converter",
-    
-    # Microsoft Dynamics CRM
-    "Microsoft Dynamics CRM 2011", "Microsoft Dynamics CRM 2011 SHS", "Microsoft Dynamics CRM 2013", 
-    "Microsoft Dynamics CRM 2015", "Microsoft Dynamics CRM 2016", "Microsoft Dynamics CRM 2016 SHS",
-    
-    # Windows Live
-    "Windows Live", "Windows Live Toolbar",
-    
-    # Windows Azure Pack-Komponenten
-    "Windows Azure Pack: Admin API", "Windows Azure Pack: Admin Authentication Site",
-    "Windows Azure Pack: Admin Site", "Windows Azure Pack: Configuration Site",
-    "Windows Azure Pack: Microsoft Best Practice Analyzer", "Windows Azure Pack: Monitoring Extension",
-    "Windows Azure Pack: MySQL Extension", "Windows Azure Pack: PowerShell API",
-    "Windows Azure Pack: SQL Server Extension", "Windows Azure Pack: Tenant API",
-    "Windows Azure Pack: Tenant Authentication Site", "Windows Azure Pack: Tenant Public API",
-    "Windows Azure Pack: Tenant Site", "Windows Azure Pack: Usage Extension",
-    "Windows Azure Pack: Web App Gallery Extension", "Windows Azure Pack: Web Sites",
-    "Microsoft Azure Site Recovery Provider",
-    
-    # Entwickler- und Reporting-Tools
-    "ASP.NET Web Frameworks", "Report Viewer 2005", "Report Viewer 2008", "Report Viewer 2010",
-    "Microsoft StreamInsight V1.0",
-    
-    # Monitoring- und Management-Tools
-    "Data Protection Manager 2006", "HPC Pack 2008", "Network Monitor 3",
-    "Service Bus for Windows Server 1.1",
-    
-    # Health- und Multimedia-Tools
-    "HealthVault Connection Center", "HealthVault Connection Center Upgrades",
-    "Microsoft Research AutoCollage 2008", "Photo Gallery Installation and Upgrades",
-    
-    # Windows-Extras und Spiele
-    "DreamScene", "Pokerspiel", 'Pokerspiel "Hold Em"', "Tinker", "Windows Ultimate Extras",
-    "Writer Installation and Upgrades",
-    
-    # Hardware-spezifische Treiber
-    "Surface Hub 2S drivers",
-    
-    # Threat Management Gateway (weitere Komponenten)
-    "Threat Management Gateway Definition Updates for Network Inspection System",
-    "TMG Firewall Client",
-    
-    # Windows 10 S (Education-Edition, nicht für Business)
-    "Windows 10 S and Later Servicing Drivers",
-    "Windows 10 S Version 1709 and Later Servicing Drivers for testing",
-    "Windows 10 S Version 1709 and Later Upgrade & Servicing Drivers for testing",
-    "Windows 10 S Version 1803 and Later Servicing Drivers",
-    "Windows 10 S Version 1803 and Later Upgrade & Servicing Drivers",
-    "Windows 10 S, version 1809 and later, Servicing Drivers",
-    "Windows 10 S, version 1809 and later, Upgrade & Servicing Drivers",
-    "Windows 10 S, version 1903 and later, Servicing Drivers",
-    "Windows 10 S, version 1903 and later, Upgrade & Servicing Drivers",
-    "Windows 10 S, Vibranium and later, Servicing Drivers",
-    "Windows 10 S, Vibranium and later, Upgrade & Servicing Drivers",
-    "Windows - Client S, version 21H2 and later, Servicing Drivers",
-    "Windows - Client S, version 21H2 and later, Upgrade & Servicing Drivers",
- 
-    # PowerShell Preview
-    "PowerShell Preview - x64",
-    
-    # SharePoint Server (erweitert)
-    "SharePoint Server 2019/Office Online Server",
-    
-    # System Center 2019
-    "System Center 2019 - Operations Manager",
-    "System Center 2019 - Orchestrator",
-    "System Center 2019 - Virtual Machine Manager",
-    "System Center 2019 Data Protection Manager",
-    
-    # Azure-Komponenten
-    "Microsoft Azure Backup Server V3 - Data Protection Manager",
-    "Microsoft Azure Edge Appliance",
-    "Azure IoT Edge for Linux on Windows Category",
-    "Azure Stack HCI",
-    
-    # Weitere veraltete Sicherheitstools
-    "Microsoft Online Services Sign-In Assistant",
-    
-    # Verschiedene Legacy-Tools
-    "CAPICOM", "Compute Cluster Pack", "Device Health", 
-    "Dictionary Updates for Microsoft IMEs", "New Dictionaries for Microsoft IMEs",
-    "Windows Dictionary Updates","Windows Safe OS Dynamic Update", "Search Enhancement Pack"
+    "Windows 10 and later GDR-DU",                                             # GDR Dynamic Updates - automatisch während Upgrades
+    "Windows 10 and later Dynamic Update",                                     # Dynamic Updates - automatisch während Feature-Updates
+    "Windows 10 GDR-DU FOD",                                                   # GDR-DU Features on Demand - automatisch installiert
+    "Windows 10 GDR-DU LP",                                                    # GDR-DU Language Packs - automatisch während Upgrades
+    "Windows 11 Dynamic Update / GDR-DU",                                      # Windows 11 Dynamic Updates - automatisch verwaltet
+    "Windows GDR-Dynamic Update"                                               # GDR Dynamic Updates - bypassen WSUS-Kontrolle
 )
 
 # Verbindung zu WSUS (lokal, kein SSL, Port 8530)
-# [void][reflection.assembly]::LoadWithPartialName('Microsoft.UpdateServices.Administration')
-# $wsus = [Microsoft.UpdateServices.Administration.AdminProxy]::GetUpdateServer($env:COMPUTERNAME, $false, 8530)
-
 [void][reflection.assembly]::LoadWithPartialName('Microsoft.UpdateServices.Administration')
-$wsus = [Microsoft.UpdateServices.Administration.AdminProxy]::GetUpdateServer($env:COMPUTERNAME.$env:USERDNSDOMAIN,$true, 8531)
+$wsus = [Microsoft.UpdateServices.Administration.AdminProxy]::GetUpdateServer($env:COMPUTERNAME, $false, 8530)
+
+# [void][reflection.assembly]::LoadWithPartialName('Microsoft.UpdateServices.Administration')
+# $wsus = [Microsoft.UpdateServices.Administration.AdminProxy]::GetUpdateServer($env:COMPUTERNAME.$env:USERDNSDOMAIN,$true, 8531)
 
 # Funktion: Bestimme den Grund für Ablehnung
+# Funktion: Bestimme den Grund für Ablehnung (KORRIGIERTE VERSION)
 function Get-DeclineReason {
     param($update)
+
+    # Liste erlaubter Sprachcodes (sowohl klein als auch groß geschrieben)
+    $allowedLanguages = @('de-de', 'en-us', 'en-gb', 'DE-DE', 'EN-US', 'EN-GB')
     
-    # Zuerst prüfen, ob es ein Sprachpaket ist (außer en-US und de-DE)
-    if ($update.ProductTitles -like "*Language*" -and 
-        $update.Title -notmatch '\[en-US_LP\]' -and 
-        $update.Title -notmatch '\[de-DE_LP\]') {
-        return "Sprachpakete"
+    # Erlaubte Sprachbegriffe (für Erkennung ohne Codes)
+    $allowedLanguageWords = @('German', 'English', 'Deutsch')
+
+    # Verbotene Sprachbegriffe (häufige Sprachen ohne Codes)
+    $forbiddenLanguageWords = @(
+        'French', 'Spanish', 'Italian', 'Portuguese', 'Dutch', 'Polish',
+        'Russian', 'Chinese', 'Japanese', 'Korean', 'Arabic', 'Hebrew',
+        'Czech', 'Hungarian', 'Swedish', 'Norwegian', 'Danish', 'Finnish',
+        'Turkish', 'Greek', 'Bulgarian', 'Romanian', 'Croatian', 'Slovak',
+        'Slovenian', 'Estonian', 'Latvian', 'Lithuanian', 'Ukrainian',
+        'Français', 'Español', 'Italiano', 'Português', 'Nederlands',
+        'Polski', 'Русский', '中文', '日本語', '한국어', 'العربية'
+    )
+
+    # Extrahiere alle Sprachcodes aus Titel und ProductTitles (verbesserte Regex)
+    $allText = $update.Title + " " + ($update.ProductTitles -join " ")
+    $languageMatches = [regex]::Matches($allText, '\b[a-zA-Z]{2}-[a-zA-Z]{2}\b') | ForEach-Object { $_.Value }
+
+    # Prüfe, ob "Language" im Titel oder in den Produkttiteln vorkommt
+    $containsLanguage = ($allText -match "Language") -or ($allText -match "Sprachpaket")
+
+    # Prüfe auf verbotene Sprachbegriffe
+    $containsForbiddenLanguage = $false
+    foreach ($forbiddenWord in $forbiddenLanguageWords) {
+        if ($allText -match [regex]::Escape($forbiddenWord)) {
+            $containsForbiddenLanguage = $true
+            break
+        }
     }
-    
+
+    # Finde nicht erlaubte Sprachcodes
+    $disallowedLanguageFound = $languageMatches | Where-Object { $_ -notin $allowedLanguages }
+
+    # KORRIGIERT: Wenn es ein Sprachpaket ist UND keine erlaubte Sprache enthält → ABLEHNEN
+    if ($containsLanguage) {
+        # Prüfe, ob deutsche oder englische Sprache enthalten ist
+        $hasAllowedLanguage = ($allText -match '(?i)(de-DE|en-US|en-GB)') -or
+                             ($allText -match '(?i)(German|English|Deutsch)')
+        
+        if (-not $hasAllowedLanguage) {
+            return "Nicht erlaubte Sprache (Sprachpaket)"
+        }
+    }
+
+    # Wenn verbotene Sprachbegriffe gefunden → Ablehnen
+    if ($containsForbiddenLanguage) {
+        return "Nicht erlaubte Sprache (Sprachbegriff)"
+    }
+
+    # Wenn nicht erlaubte Sprachcodes gefunden → Ablehnen
+    if ($disallowedLanguageFound) {
+        $foundCodes = $disallowedLanguageFound -join ", "
+        return "Nicht erlaubte Sprache ($foundCodes)"
+    }
+
+    # Weitere bestehende Prüfpunkte (unverändert)
     if ($update.IsBeta) { return "Beta" }
     if ($update.IsSuperseded) { return "Superseded" }
-    
+
+    # Prüfe Produkttitel auf Ablehnungsgründe
     foreach ($pt in $update.ProductTitles) {
         foreach ($prod in $productsToDecline) {
             if ($pt.IndexOf($prod, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
@@ -245,8 +421,11 @@ function Get-DeclineReason {
             }
         }
     }
+
+    # Wenn kein Ablehnungsgrund gefunden, Update erlauben
     return $null
 }
+
 
 # Updates laden
 Write-Host "Updates werden geladen..."
@@ -309,4 +488,6 @@ if ($totalFailed -gt 0) {
     Write-Host "Fehler: $totalFailed"
 }
 
+
+Write-Host -Foregroundcolor Green "`n`nVerbleibende Updates nach Kategorien:`n"
 ($wsus.GetUpdates($scope) | Where-Object { -not $_.IsDeclined }).ProductTitles | Sort-Object -Unique
