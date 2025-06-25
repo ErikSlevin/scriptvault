@@ -43,6 +43,10 @@ $productsToDecline = @(
     "Windows Essential Business Server Preinstallation Tools",
     "Windows Server Technical Preview Language Packs",
     "Windows Server Solutions Best Practices Analyzer 1.0", "Microsoft Monitoring Agent",
+    "Windows Server Drivers",
+    "Windows Server 2008 R2",
+    "Windows Server 2012 R2",
+    "Windows Server 2012 R2 Drivers",
     
     # Exchange Server
     "Exchange Server 2000", "Exchange 2000 Server", "Exchange Server 2007",
@@ -54,6 +58,8 @@ $productsToDecline = @(
     "SQL Server 2017", "Microsoft SQL Server 2019",
     "Microsoft SQL Server Management Studio v17",
     "SQL Server Feature Pack",
+    "Microsoft SQL Server 2016",
+    "Microsoft SQL Server 2017",
     
     # BizTalk Server
     "BizTalk Server 2002", "BizTalk Server 2006R2", "BizTalk Server 2009", "BizTalk Server 2013",
@@ -67,10 +73,13 @@ $productsToDecline = @(
     "Office Communicator Server", "Office Communicator Server 2007", "Office Communications Server",
     "Office Communications Server 2007", "Office Communicator 2007 R2", 
     "Skype for Business", "Skype for Business 2015",
+    "Skype for Business Server 2015, SmartSetup",
+    "Skype for Business Server 2019, SmartSetup",
     
     # Office-Produkte (einzelne Anwendungen)
     "Office XP", "Office 2003", "Office 2007", "Office 2010", "Office 2013", "Office 365",
     "Microsoft 365", "Office 2002/XP", "Office Live Add-in",
+    "Microsoft 365 Apps/Office 2019/Office LTSC",
     
     # Publisher-Versionen
     "Publisher", "Publisher 2000", "Publisher 2002", "Publisher 2003", "Publisher 2007",
@@ -92,6 +101,12 @@ $productsToDecline = @(
     # Windows-Betriebssysteme
     "Windows 2000", "Windows XP", "Windows Vista", "Windows 7", "Windows 8", "Windows 8.1", 
     "Windows RT", "Windows Embedded",
+    "Windows XP 64-Bit Edition Version 2003",
+    "Windows Insider Pre-Release",
+    "Windows RT 8.1",
+    "Windows Embedded Standard 7",
+    "Windows 8 Embedded",
+    "Windows 8.1 Drivers",
     
     # Browser und Web-Technologien
     "Internet Explorer", "Microsoft Edge Legacy", "Silverlight",
@@ -135,7 +150,7 @@ $productsToDecline = @(
     "Windows Azure Pack: Tenant Authentication Site", "Windows Azure Pack: Tenant Public API",
     "Windows Azure Pack: Tenant Site", "Windows Azure Pack: Usage Extension",
     "Windows Azure Pack: Web App Gallery Extension", "Windows Azure Pack: Web Sites",
-    "Microsoft Azure Site Recovery Provider"
+    "Microsoft Azure Site Recovery Provider",
     
     # Entwickler- und Reporting-Tools
     "ASP.NET Web Frameworks", "Report Viewer 2005", "Report Viewer 2008", "Report Viewer 2010",
@@ -172,7 +187,26 @@ $productsToDecline = @(
     "Windows 10 S, version 1903 and later, Upgrade & Servicing Drivers",
     "Windows 10 S, Vibranium and later, Servicing Drivers",
     "Windows 10 S, Vibranium and later, Upgrade & Servicing Drivers",
+    "Windows - Client S, version 21H2 and later, Servicing Drivers",
+    "Windows - Client S, version 21H2 and later, Upgrade & Servicing Drivers",
  
+    # PowerShell Preview
+    "PowerShell Preview - x64",
+    
+    # SharePoint Server (erweitert)
+    "SharePoint Server 2019/Office Online Server",
+    
+    # System Center 2019
+    "System Center 2019 - Operations Manager",
+    "System Center 2019 - Orchestrator",
+    "System Center 2019 - Virtual Machine Manager",
+    "System Center 2019 Data Protection Manager",
+    
+    # Azure-Komponenten
+    "Microsoft Azure Backup Server V3 - Data Protection Manager",
+    "Microsoft Azure Edge Appliance",
+    "Azure IoT Edge for Linux on Windows Category",
+    "Azure Stack HCI",
     
     # Weitere veraltete Sicherheitstools
     "Microsoft Online Services Sign-In Assistant",
