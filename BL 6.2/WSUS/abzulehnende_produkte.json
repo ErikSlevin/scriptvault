@@ -1,42 +1,21 @@
 {
   "metadata": {
-    "version": "1.0.0",
-    "lastUpdated": "2025-06-26",
-    "description": "Konfiguration für WSUS-Update-Ablehnung - Unerwünschte Microsoft-Produkte",
+    "version": "1.0.1",
+    "lastUpdated": "2025-06-27",
+    "description": "Vereinfachte WSUS-Update-Konfiguration für PowerShell",
     "author": "Erik Slevin",
-    "documentation": "Diese Datei definiert welche Microsoft-Produkte automatisch in WSUS abgelehnt werden sollen."
+    "documentation": "Optimiert für PowerShell ConvertFrom-Json"
   },
-  "settings": {
-    "enableAllCategories": true,
-    "logDeclinedUpdates": true,
-    "createBackupBeforeDecline": false,
-    "excludeCriticalFromAutoDecline": false,
-    "notificationSettings": {
-      "emailOnCriticalDecline": true,
-      "logLevel": "detailed"
-    }
-  },
-  "documentation": {
-    "usage": "Diese Datei konfiguriert welche Microsoft-Produkte automatisch in WSUS abgelehnt werden. Setzen Sie 'ablehnen': false für Kategorien die Sie nicht ablehnen möchten.",
-    "priorityLevels": {
-      "critical": "Höchste Priorität - kann Systemstabilität beeinträchtigen",
-      "high": "Hohe Priorität - Sicherheitsrisiko oder definitiv nicht verwendet",
-      "medium": "Mittlere Priorität - wahrscheinlich nicht verwendet",
-      "low": "Niedrige Priorität - möglicherweise nicht verwendet"
-    },
-    "lastReview": "2025-06-26",
-    "nextReview": "2025-12-26"
-  },
-  "categories": {
-    "windows_client_legacy": {
+  "declined_updates": [
+    {
+      "category": "windows_client_legacy",
       "name": "Windows Client - Legacy (2000-8.1)",
       "description": "Windows Client-Versionen die End-of-Life erreicht haben",
-      "ablehnen": true,
       "priority": "high",
       "reason": "Sicherheitsrisiko - keine offiziellen Updates mehr verfügbar",
       "products": [
         "Windows 2000",
-        "Windows XP", 
+        "Windows XP",
         "Windows XP 64-Bit Edition Version 2003",
         "Windows Vista",
         "Windows 7",
@@ -45,10 +24,10 @@
         "Windows 8.1 Drivers"
       ]
     },
-    "windows_embedded_legacy": {
+    {
+      "category": "windows_embedded_legacy",
       "name": "Windows Embedded - Legacy",
       "description": "Embedded- und spezialisierte Windows-Versionen die nicht mehr unterstützt werden",
-      "ablehnen": true,
       "priority": "medium",
       "reason": "End-of-Life erreicht, keine Updates mehr verfügbar",
       "products": [
@@ -59,46 +38,36 @@
         "Windows RT 8.1"
       ]
     },
-    "windows_10_versions": {
+    {
+      "category": "windows_10_versions",
       "name": "Windows 10 - Spezielle Versionen",
       "description": "Windows 10 spezielle Editionen und Versionen",
-      "ablehnen": true,
       "priority": "medium",
       "reason": "Spezielle Editionen nicht für Standard-Business-Umgebung",
       "products": [
         "Windows 10 LTSB"
       ]
     },
-    "windows_11_versions": {
-      "name": "Windows 11 - Alle Versionen",
-      "description": "Windows 11-spezifische Updates",
-      "ablehnen": false,
-      "priority": "medium",
-      "reason": "Windows 11 wird eingesetzt - Updates erwünscht",
-      "products": [
-        "Windows 11"
-      ]
-    },
-    "windows_insider": {
+    {
+      "category": "windows_insider",
       "name": "Windows Insider/Preview",
       "description": "Windows Preview und Insider-Builds",
-      "ablehnen": true,
       "priority": "medium",
       "reason": "Preview-Versionen nicht für Produktionsumgebungen geeignet",
       "products": [
         "Windows Insider Pre-Release"
       ]
     },
-    "windows_10_s_edition": {
+    {
+      "category": "windows_10_s_edition",
       "name": "Windows 10 S Edition",
       "description": "Windows 10 S ist für Bildungseinrichtungen optimiert, nicht für Geschäftsumgebungen",
-      "ablehnen": true,
       "priority": "medium",
       "reason": "Education-fokussierte Edition mit App Store-Beschränkungen, ungeeignet für Business",
       "products": [
         "Windows 10 S and Later Servicing Drivers",
         "Windows 10 S Version 1709 and Later Servicing Drivers for testing",
-        "Windows 10 S Version 1709 and Later Upgrade & Servicing Drivers for testing", 
+        "Windows 10 S Version 1709 and Later Upgrade & Servicing Drivers for testing",
         "Windows 10 S Version 1803 and Later Servicing Drivers",
         "Windows 10 S Version 1803 and Later Upgrade & Servicing Drivers",
         "Windows 10 S, version 1809 and later, Servicing Drivers",
@@ -111,45 +80,25 @@
         "Windows - Client S, version 21H2 and later, Upgrade & Servicing Drivers"
       ]
     },
-    "windows_server_legacy": {
+    {
+      "category": "windows_server_legacy",
       "name": "Windows Server - Legacy (2003-2012 R2)",
       "description": "Windows Server-Versionen die End-of-Life erreicht haben",
-      "ablehnen": true,
       "priority": "high",
       "reason": "End-of-Life erreicht, Sicherheitsrisiko durch fehlende Updates",
       "products": [
         "Server 2003",
         "Windows Server 2008",
-        "Windows Server 2008 R2", 
+        "Windows Server 2008 R2",
         "Windows Server 2012",
         "Windows Server 2012 R2",
         "Windows Server 2012 R2 Drivers"
       ]
     },
-    "windows_server_2016": {
-      "name": "Windows Server 2016",
-      "description": "Windows Server 2016-spezifische Updates",
-      "ablehnen": false,
-      "priority": "medium",
-      "reason": "Server 2016 wird in der Umgebung verwendet - Updates erwünscht",
-      "products": [
-        "Windows Server 2016"
-      ]
-    },
-    "windows_server_2019": {
-      "name": "Windows Server 2019",
-      "description": "Windows Server 2019-spezifische Updates",
-      "ablehnen": false,
-      "priority": "medium",
-      "reason": "Server 2019 wird in der Umgebung GGF demnächst verwendet - Updates erwünscht",
-      "products": [
-        "Windows Server 2019"
-      ]
-    },
-    "windows_server_2022": {
+    {
+      "category": "windows_server_2022",
       "name": "Windows Server 2022",
       "description": "Windows Server 2022-spezifische Updates",
-      "ablehnen": true,
       "priority": "low",
       "reason": "Server 2022 noch nicht in der Infrastruktur eingesetzt",
       "products": [
@@ -157,20 +106,20 @@
         "Server 2022 Hotpatch Category"
       ]
     },
-    "windows_server_2025": {
+    {
+      "category": "windows_server_2025",
       "name": "Windows Server 2025",
       "description": "Windows Server 2025-spezifische Updates",
-      "ablehnen": true,
       "priority": "low",
       "reason": "Server 2025 noch nicht verfügbar/eingesetzt",
       "products": [
         "Windows Server 2025"
       ]
     },
-    "windows_server_sac": {
+    {
+      "category": "windows_server_sac",
       "name": "Windows Server - Semi-Annual Channel",
       "description": "Windows Server Semi-Annual Channel Versionen",
-      "ablehnen": true,
       "priority": "medium",
       "reason": "SAC-Versionen werden nicht verwendet, nur LTSC",
       "products": [
@@ -179,10 +128,10 @@
         "Windows Server Technical Preview Language Packs"
       ]
     },
-    "small_business_server": {
+    {
+      "category": "small_business_server",
       "name": "Small Business Server",
       "description": "Microsoft Small Business Server-Editionen",
-      "ablehnen": true,
       "priority": "medium",
       "reason": "End-of-Life erreicht, für kleine Unternehmen konzipiert, nicht für Enterprise-Umgebungen",
       "products": [
@@ -195,87 +144,54 @@
         "Windows Server Solutions Best Practices Analyzer 1.0"
       ]
     },
-    "sharepoint_server": {
+    {
+      "category": "sharepoint_server",
       "name": "SharePoint Server",
       "description": "Microsoft SharePoint Server-Versionen",
-      "ablehnen": true,
       "priority": "high",
       "reason": "SharePoint wird nicht in der Umgebung eingesetzt, Updates würden Ressourcen verschwenden",
       "products": [
         "SharePoint Server",
         "SharePoint Server 2016",
-        "SharePoint Server 2019", 
+        "SharePoint Server 2019",
         "SharePoint Server 2019/Office Online Server"
       ]
     },
-    "exchange_server": {
+    {
+      "category": "exchange_server",
       "name": "Exchange Server",
       "description": "Microsoft Exchange Server-Versionen",
-      "ablehnen": true,
-      "priority": "high", 
+      "priority": "high",
       "reason": "Exchange wird nicht lokal betrieben (Cloud-basiert), lokale Updates nicht erforderlich",
       "products": [
         "Exchange 2000 Server",
         "Exchange Server 2000",
         "Exchange Server 2007",
-        "Exchange Server 2010", 
+        "Exchange Server 2010",
         "Exchange Server 2013",
         "Exchange Server 2016",
         "Exchange Server 2019",
         "Antigen for Exchange/SMTP"
       ]
     },
-    "sql_server_legacy": {
+    {
+      "category": "sql_server_legacy",
       "name": "SQL Server - Legacy (2000-2014)",
       "description": "SQL Server-Versionen die End-of-Life erreicht haben",
-      "ablehnen": true,
       "priority": "high",
       "reason": "End-of-Life erreicht, Sicherheitsrisiko durch fehlende Updates",
       "products": [
         "SQL Server 2000",
-        "SQL Server 2005", 
+        "SQL Server 2005",
         "SQL Server 2008",
         "SQL Server 2012",
         "SQL Server 2014"
       ]
     },
-    "sql_server_2016": {
-      "name": "SQL Server 2016",
-      "description": "Microsoft SQL Server 2016-spezifische Updates",
-      "ablehnen": false,
-      "priority": "medium",
-      "reason": "SQL Server 2016 wird GGF in der Umgebung verwendet - Updates erwünscht",
-      "products": [
-        "Microsoft SQL Server 2016",
-        "SQL Server 2016"
-      ]
-    },
-    "sql_server_2017": {
-      "name": "SQL Server 2017",
-      "description": "Microsoft SQL Server 2017-spezifische Updates",
-      "ablehnen": false,
-      "priority": "medium",
-      "reason": "SQL Server 2017 wird GGF in der Umgebung verwendet - Updates erwünscht",
-      "products": [
-        "SQL Server 2017",
-        "Microsoft SQL Server 2017"
-      ]
-    },
-    "sql_server_2019": {
-      "name": "SQL Server 2019",
-      "description": "Microsoft SQL Server 2019-spezifische Updates",
-      "ablehnen": false,
-      "priority": "medium",
-      "reason": "SQL Server 2019 wird in der Umgebung GGF verwendet - Updates erwünscht",
-      "products": [
-        "Microsoft SQL Server 2019",
-        "SQL Server 2019"
-      ]
-    },
-    "sql_server_2022": {
+    {
+      "category": "sql_server_2022",
       "name": "SQL Server 2022",
       "description": "Microsoft SQL Server 2022-spezifische Updates",
-      "ablehnen": true,
       "priority": "low",
       "reason": "SQL Server 2022 noch nicht in der Infrastruktur eingesetzt",
       "products": [
@@ -283,10 +199,10 @@
         "SQL Server 2022"
       ]
     },
-    "sql_server_management_studio": {
+    {
+      "category": "sql_server_management_studio",
       "name": "SQL Server Management Studio (SSMS) - Legacy",
       "description": "Ältere SSMS-Versionen vor v18",
-      "ablehnen": true,
       "priority": "medium",
       "reason": "Ältere SSMS-Versionen werden nicht verwendet, erst ab v18",
       "products": [
@@ -297,32 +213,20 @@
         "SQL Server Management Studio v13"
       ]
     },
-    "sql_server_management_studio_18_plus": {
-      "name": "SQL Server Management Studio v18+",
-      "description": "SQL Server Management Studio v18 und neuer",
-      "ablehnen": false,
-      "priority": "medium",
-      "reason": "SSMS v18+ wird verwendet - Updates erwünscht",
-      "products": [
-        "Microsoft SQL Server Management Studio v18",
-        "Microsoft SQL Server Management Studio v19",
-        "Microsoft SQL Server Management Studio v20"
-      ]
-    },
-    "sql_server_tools": {
+    {
+      "category": "sql_server_tools",
       "name": "SQL Server - Zusätzliche Tools",
       "description": "SQL Server Feature Packs und zusätzliche Tools",
-      "ablehnen": true,
       "priority": "low",
       "reason": "Feature Packs werden nicht separat benötigt",
       "products": [
         "SQL Server Feature Pack"
       ]
     },
-    "office_legacy": {
+    {
+      "category": "office_legacy",
       "name": "Office - Legacy (XP-2013)",
       "description": "Microsoft Office-Versionen die End-of-Life erreicht haben",
-      "ablehnen": true,
       "priority": "high",
       "reason": "End-of-Life erreicht, Sicherheitsrisiko durch fehlende Updates",
       "products": [
@@ -334,41 +238,10 @@
         "Office 2013"
       ]
     },
-    "office_2016": {
-      "name": "Office 2016",
-      "description": "Microsoft Office 2016-spezifische Updates",
-      "ablehnen": false,
-      "priority": "medium",
-      "reason": "Office 2016 wird verwendet - Updates erwünscht",
-      "products": [
-        "Office 2016"
-      ]
-    },
-    "office_2019": {
-      "name": "Office 2019",
-      "description": "Microsoft Office 2019-spezifische Updates",
-      "ablehnen": false,
-      "priority": "medium",
-      "reason": "Office 2019 wird verwendet - Updates erwünscht",
-      "products": [
-        "Office 2019"
-      ]
-    },
-    "office_2021": {
-      "name": "Office 2021/LTSC",
-      "description": "Microsoft Office 2021/LTSC-spezifische Updates",
-      "ablehnen": false,
-      "priority": "medium",
-      "reason": "Office 2021 wird verwendet - Updates erwünscht",
-      "products": [
-        "Office 2021",
-        "Office LTSC 2021"
-      ]
-    },
-    "office_cloud": {
+    {
+      "category": "office_cloud",
       "name": "Office - Cloud-Versionen",
       "description": "Cloud-basierte Office-Versionen die separat verwaltet werden",
-      "ablehnen": true,
       "priority": "medium",
       "reason": "Wird über Microsoft 365 Admin Center verwaltet, nicht über WSUS",
       "products": [
@@ -377,16 +250,16 @@
         "Microsoft 365 Apps/Office 2019/Office LTSC"
       ]
     },
-    "office_components_legacy": {
+    {
+      "category": "office_components_legacy",
       "name": "Office-Komponenten - Legacy",
       "description": "Einzelne Office-Anwendungen veralteter Versionen",
-      "ablehnen": true,
       "priority": "medium",
       "reason": "Veraltete Einzelkomponenten, durch neuere Office-Suites ersetzt",
       "products": [
         "Access",
         "Access 2002",
-        "Excel", 
+        "Excel",
         "Excel 2002",
         "Outlook",
         "Outlook 2002",
@@ -395,42 +268,42 @@
         "Office Live Add-in"
       ]
     },
-    "office_publisher": {
+    {
+      "category": "office_publisher",
       "name": "Microsoft Publisher",
       "description": "Microsoft Publisher-Versionen",
-      "ablehnen": true,
       "priority": "low",
       "reason": "Publisher wird in der Umgebung nicht verwendet",
       "products": [
         "Publisher",
         "Publisher 2000",
         "Publisher 2002",
-        "Publisher 2003", 
+        "Publisher 2003",
         "Publisher 2007",
         "Publisher 2010",
         "Publisher 2013"
       ]
     },
-    "office_visio": {
+    {
+      "category": "office_visio",
       "name": "Microsoft Visio",
       "description": "Microsoft Visio-Versionen",
-      "ablehnen": true,
       "priority": "low",
-      "reason": "Visio wird nicht verwendet ",
+      "reason": "Visio wird nicht verwendet",
       "products": [
         "Visio",
         "Visio 2000",
-        "Visio 2002", 
+        "Visio 2002",
         "Visio 2003",
         "Visio 2007",
         "Visio 2010",
         "Visio 2013"
       ]
     },
-    "office_project": {
+    {
+      "category": "office_project",
       "name": "Microsoft Project",
       "description": "Microsoft Project-Versionen",
-      "ablehnen": true,
       "priority": "low",
       "reason": "Project wird nicht verwendet",
       "products": [
@@ -439,14 +312,14 @@
         "Project 2002",
         "Project 2003",
         "Project 2007",
-        "Project 2010", 
+        "Project 2010",
         "Project 2013"
       ]
     },
-    "powershell_legacy": {
+    {
+      "category": "powershell_legacy",
       "name": "PowerShell - Legacy (2.0-4.0)",
       "description": "Veraltete PowerShell-Versionen die durch 5.1+ ersetzt wurden",
-      "ablehnen": true,
       "priority": "medium",
       "reason": "Veraltete PowerShell-Versionen, Sicherheitsrisiko und fehlende Features",
       "products": [
@@ -455,21 +328,10 @@
         "PowerShell 2.0"
       ]
     },
-    "powershell_5x": {
-      "name": "PowerShell 5.x (Windows PowerShell)",
-      "description": "PowerShell 5.x die mit Windows ausgeliefert wird",
-      "ablehnen": false,
-      "priority": "medium",
-      "reason": "PowerShell 5.1 wird noch verwendet - Updates erwünscht",
-      "products": [
-        "PowerShell 5.1",
-        "PowerShell 5.0"
-      ]
-    },
-    "powershell_6": {
+    {
+      "category": "powershell_6",
       "name": "PowerShell 6",
       "description": "PowerShell 6.x (PowerShell Core)",
-      "ablehnen": true,
       "priority": "medium",
       "reason": "PowerShell 6 ist End-of-Life, durch PowerShell 7+ ersetzt",
       "products": [
@@ -478,10 +340,10 @@
         "PowerShell 6.2"
       ]
     },
-    "powershell_7": {
+    {
+      "category": "powershell_7",
       "name": "PowerShell 7",
       "description": "PowerShell 7.x (aktuelle Version)",
-      "ablehnen": true,
       "priority": "low",
       "reason": "PowerShell 7 wird NOCH NICHT verwendet",
       "products": [
@@ -492,10 +354,10 @@
         "PowerShell 7.4"
       ]
     },
-    "powershell_preview": {
+    {
+      "category": "powershell_preview",
       "name": "PowerShell Preview-Versionen",
       "description": "PowerShell Preview und Beta-Versionen",
-      "ablehnen": true,
       "priority": "medium",
       "reason": "Preview-Versionen nicht für Produktionsumgebungen geeignet",
       "products": [
@@ -505,10 +367,10 @@
         "PowerShell 8-preview"
       ]
     },
-    "visual_studio_legacy": {
+    {
+      "category": "visual_studio_legacy",
       "name": "Visual Studio - Legacy (2005-2015)",
       "description": "Visual Studio-Versionen die End-of-Life erreicht haben",
-      "ablehnen": true,
       "priority": "medium",
       "reason": "End-of-Life erreicht, moderne Entwicklungsumgebungen verfügbar",
       "products": [
@@ -520,10 +382,10 @@
         "Visual Studio 2015"
       ]
     },
-    "dotnet_legacy": {
+    {
+      "category": "dotnet_legacy",
       "name": ".NET Framework - Legacy",
       "description": ".NET-Versionen die End-of-Life erreicht haben",
-      "ablehnen": true,
       "priority": "medium",
       "reason": "End-of-Life erreicht, moderne .NET-Versionen verfügbar",
       "products": [
@@ -532,10 +394,10 @@
         ".NET Core 3.1"
       ]
     },
-    "system_center": {
+    {
+      "category": "system_center",
       "name": "System Center",
       "description": "Microsoft System Center-Komponenten",
-      "ablehnen": true,
       "priority": "medium",
       "reason": "System Center wird nicht in der Umgebung eingesetzt",
       "products": [
@@ -547,10 +409,10 @@
         "Microsoft Monitoring Agent"
       ]
     },
-    "communication_servers": {
+    {
+      "category": "communication_servers",
       "name": "Kommunikationsserver",
       "description": "Microsoft Lync, Skype for Business und verwandte Server",
-      "ablehnen": true,
       "priority": "medium",
       "reason": "Kommunikation erfolgt über Microsoft Teams, Legacy-Server nicht mehr verwendet",
       "products": [
@@ -569,10 +431,10 @@
         "Skype for Business Server 2019, SmartSetup"
       ]
     },
-    "biztalk_server": {
+    {
+      "category": "biztalk_server",
       "name": "BizTalk Server",
       "description": "Microsoft BizTalk Server-Versionen",
-      "ablehnen": true,
       "priority": "medium",
       "reason": "BizTalk wird nicht in der Umgebung eingesetzt",
       "products": [
@@ -582,10 +444,10 @@
         "BizTalk Server 2013"
       ]
     },
-    "host_integration_server": {
+    {
+      "category": "host_integration_server",
       "name": "Host Integration Server",
       "description": "Microsoft Host Integration Server-Versionen",
-      "ablehnen": true,
       "priority": "low",
       "reason": "Legacy-Mainframe-Integration nicht mehr verwendet",
       "products": [
@@ -596,10 +458,10 @@
         "Host Integration Server 2010"
       ]
     },
-    "browser_web_legacy": {
+    {
+      "category": "browser_web_legacy",
       "name": "Browser und Web-Technologien (Legacy)",
       "description": "Veraltete Browser und Web-Technologien",
-      "ablehnen": true,
       "priority": "high",
       "reason": "End-of-Life erreicht, Sicherheitsrisiko, moderne Browser verfügbar",
       "products": [
@@ -610,10 +472,10 @@
         "Search Enhancement Pack"
       ]
     },
-    "security_tools_legacy": {
+    {
+      "category": "security_tools_legacy",
       "name": "Sicherheitstools (Legacy)",
       "description": "Veraltete Microsoft Sicherheits- und Management-Tools",
-      "ablehnen": true,
       "priority": "medium",
       "reason": "Durch Windows Defender und moderne Sicherheitstools ersetzt",
       "products": [
@@ -625,5 +487,127 @@
         "Forefront Protection Category",
         "Forefront Server Security Category",
         "Forefront Threat Management Gateway, Definition Updates for HTTP Malware Inspection",
-        "Forefront TMG",
-        "
+        "Forefront TMG"
+      ]
+    }
+  ],
+  "approved_updates": [
+    {
+      "category": "windows_11_versions",
+      "name": "Windows 11 - Alle Versionen",
+      "description": "Windows 11-spezifische Updates",
+      "priority": "medium",
+      "reason": "Windows 11 wird eingesetzt - Updates erwünscht",
+      "products": [
+        "Windows 11"
+      ]
+    },
+    {
+      "category": "windows_server_2016",
+      "name": "Windows Server 2016",
+      "description": "Windows Server 2016-spezifische Updates",
+      "priority": "medium",
+      "reason": "Server 2016 wird in der Umgebung verwendet - Updates erwünscht",
+      "products": [
+        "Windows Server 2016"
+      ]
+    },
+    {
+      "category": "windows_server_2019",
+      "name": "Windows Server 2019",
+      "description": "Windows Server 2019-spezifische Updates",
+      "priority": "medium",
+      "reason": "Server 2019 wird in der Umgebung GGF demnächst verwendet - Updates erwünscht",
+      "products": [
+        "Windows Server 2019"
+      ]
+    },
+    {
+      "category": "sql_server_2016",
+      "name": "SQL Server 2016",
+      "description": "Microsoft SQL Server 2016-spezifische Updates",
+      "priority": "medium",
+      "reason": "SQL Server 2016 wird GGF in der Umgebung verwendet - Updates erwünscht",
+      "products": [
+        "Microsoft SQL Server 2016",
+        "SQL Server 2016"
+      ]
+    },
+    {
+      "category": "sql_server_2017",
+      "name": "SQL Server 2017",
+      "description": "Microsoft SQL Server 2017-spezifische Updates",
+      "priority": "medium",
+      "reason": "SQL Server 2017 wird GGF in der Umgebung verwendet - Updates erwünscht",
+      "products": [
+        "SQL Server 2017",
+        "Microsoft SQL Server 2017"
+      ]
+    },
+    {
+      "category": "sql_server_2019",
+      "name": "SQL Server 2019",
+      "description": "Microsoft SQL Server 2019-spezifische Updates",
+      "priority": "medium",
+      "reason": "SQL Server 2019 wird in der Umgebung GGF verwendet - Updates erwünscht",
+      "products": [
+        "Microsoft SQL Server 2019",
+        "SQL Server 2019"
+      ]
+    },
+    {
+      "category": "sql_server_management_studio_18_plus",
+      "name": "SQL Server Management Studio v18+",
+      "description": "SQL Server Management Studio v18 und neuer",
+      "priority": "medium",
+      "reason": "SSMS v18+ wird verwendet - Updates erwünscht",
+      "products": [
+        "Microsoft SQL Server Management Studio v18",
+        "Microsoft SQL Server Management Studio v19",
+        "Microsoft SQL Server Management Studio v20"
+      ]
+    },
+    {
+      "category": "office_2016",
+      "name": "Office 2016",
+      "description": "Microsoft Office 2016-spezifische Updates",
+      "priority": "medium",
+      "reason": "Office 2016 wird verwendet - Updates erwünscht",
+      "products": [
+        "Office 2016"
+      ]
+    },
+    {
+      "category": "office_2019",
+      "name": "Office 2019",
+      "description": "Microsoft Office 2019-spezifische Updates",
+      "priority": "medium",
+      "reason": "Office 2019 wird verwendet - Updates erwünscht",
+      "products": [
+        "Office 2019"
+      ]
+    },
+    {
+      "category": "office_2021",
+      "name": "Office 2021/LTSC",
+      "description": "Microsoft Office 2021/LTSC-spezifische Updates",
+      "priority": "medium",
+      "reason": "Office 2021 wird verwendet - Updates erwünscht",
+      "products": [
+        "Office 2021",
+        "Office LTSC 2021"
+      ]
+    },
+    {
+      "category": "powershell_5x",
+      "name": "PowerShell 5.x (Windows PowerShell)",
+      "description": "PowerShell 5.x die mit Windows ausgeliefert wird",
+      "priority": "medium",
+      "reason": "PowerShell 5.1 wird noch verwendet - Updates erwünscht",
+      "products": [
+        "PowerShell 5.1",
+        "PowerShell 5.0"
+      ]
+    }
+  ]
+}
