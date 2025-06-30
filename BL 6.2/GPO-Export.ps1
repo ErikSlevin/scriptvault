@@ -19,6 +19,11 @@ param(
     [string]$BackupPath
 )
 
+Clear-Host
+Write-Host -ForegroundColor Green "`n       ╔════════════════════════════════════════════════════════════════════════════╗"
+Write-Host -ForegroundColor Green "       ║                                GPO-Tool: EXPORT                            ║"
+Write-Host -ForegroundColor Green "       ╚════════════════════════════════════════════════════════════════════════════╝ `n"
+
 # Parameter validieren - beide müssen zusammen angegeben werden
 if (($GPONames -and -not $BackupPath) -or (-not $GPONames -and $BackupPath)) {
     Write-Host "`nFEHLER: Beide Parameter müssen zusammen angegeben werden!" -ForegroundColor Red
