@@ -33,8 +33,8 @@
 
 .NOTES
     Version: 2.0
-    Autor: IT-Administration
-    Erstellt: 2025
+    Autor: Erik Slevin
+    Erstellt: 30.06.20255
     Benötigt: PowerShell 5.1+, GroupPolicy-Modul, Domain-Zugriff
 #>
 
