@@ -1,3 +1,4 @@
+
 {
   "metadata": {
     "version": "1.0.1",
@@ -270,7 +271,7 @@
     },
     {
       "category": "office_publisher",
-      "name": "Microsoft Publisher",
+      "name": "Microsoft Publisher (2000-2013)",
       "description": "Microsoft Publisher-Versionen",
       "priority": "low",
       "reason": "Publisher wird in der Umgebung nicht verwendet",
@@ -286,7 +287,7 @@
     },
     {
       "category": "office_visio",
-      "name": "Microsoft Visio",
+      "name": "Microsoft Visio (2000-2013)",
       "description": "Microsoft Visio-Versionen",
       "priority": "low",
       "reason": "Visio wird nicht verwendet",
@@ -302,7 +303,7 @@
     },
     {
       "category": "office_project",
-      "name": "Microsoft Project",
+      "name": "Microsoft Project (2000-2013)",
       "description": "Microsoft Project-Versionen",
       "priority": "low",
       "reason": "Project wird nicht verwendet",
