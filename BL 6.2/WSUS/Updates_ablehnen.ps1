@@ -435,116 +435,126 @@ try {
     
     # Menü anzeigen
     do {
-        Write-WSUSLog " " -Status INFO
-        Write-WSUSLog "========================================" -Status INFO
-        Write-WSUSLog "HAUPTMENÜ" -Status INFO
-        Write-WSUSLog "========================================" -Status INFO
-        Write-WSUSLog " " -Status INFO
-        Write-WSUSLog "1. Abzulehnende Produkte verwalten" -Status INFO
-        Write-WSUSLog "2. Erlaubte Produkte verwalten" -Status INFO
-        Write-WSUSLog "3. Statistiken anzeigen" -Status INFO
-        Write-WSUSLog " " -Status INFO
-        Write-WSUSLog "0. Beenden" -Status INFO
-        Write-WSUSLog " " -Status INFO
-        Write-WSUSLog "========================================" -Status INFO
+        Write-Host "`n" -ForegroundColor White
+        Write-Host "========================================" -ForegroundColor Cyan
+        Write-Host "         WSUS PRODUKTVERWALTUNG         " -ForegroundColor Cyan
+        Write-Host "========================================" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "1. Abzulehnende Produkte anzeigen" -ForegroundColor White
+        Write-Host "2. Erlaubte Produkte anzeigen" -ForegroundColor White
+        Write-Host "3. Statistiken anzeigen" -ForegroundColor White
+        Write-Host ""
+        Write-Host "0. Beenden" -ForegroundColor Gray
+        Write-Host ""
+        Write-Host "========================================" -ForegroundColor Cyan
         
         $UserChoice = Read-Host "Bitte wählen Sie eine Option"
         
         switch ($UserChoice) {
             "1" {
                 # Abzulehnende Produkte
-                Write-WSUSLog " " -Status INFO
-                Write-WSUSLog "ABZULEHNENDE PRODUKTE" -Status WARNING
-                Write-WSUSLog "========================================" -Status INFO
+                Clear-Host
+                Write-Host "`n========================================" -ForegroundColor Red
+                Write-Host "       ABZULEHNENDE PRODUKTE" -ForegroundColor Red
+                Write-Host "========================================`n" -ForegroundColor Red
                 
                 foreach ($category in $JsonContent.declined_updates) {
-                    Write-WSUSLog " " -Status INFO
-                    Write-WSUSLog "Kategorie: $($category.name)" -Status INFO
-                    Write-WSUSLog "Beschreibung: $($category.description)" -Status SUBINFO
-                    Write-WSUSLog "Priorität: $($category.priority)" -Status SUBINFO
-                    Write-WSUSLog "Grund: $($category.reason)" -Status SUBINFO
-                    Write-WSUSLog "Anzahl Produkte: $($category.products.Count)" -Status SUBINFO
+                    Write-Host "$($category.name) - Anzahl Produkte: $($category.products.Count)" -ForegroundColor Yellow
+                    Write-Host "* Beschreibung: $($category.description)" -ForegroundColor Gray
+                    Write-Host "* Grund: $($category.reason)" -ForegroundColor Gray
+                    Write-Host ""
+                    
                     
                     if ($EnableFileLogging) {
-                        Write-WSUSLogFile "Kategorie: $($category.name) | Produkte: $($category.products.Count)"
+                        Write-WSUSLogFile "Anzeige abzulehnende Kategorie: $($category.name) | Produkte: $($category.products.Count)"
                     }
                 }
                 
-                Write-WSUSLog " " -Status INFO
-                Write-WSUSLog "Gesamt abzulehnende Kategorien: $($JsonContent.declined_updates.Count)" -Status WARNING
-                
                 $TotalDeclinedProducts = ($JsonContent.declined_updates | ForEach-Object { $_.products.Count } | Measure-Object -Sum).Sum
-                Write-WSUSLog "Gesamt abzulehnende Produkte: $TotalDeclinedProducts" -Status WARNING
+                Write-Host "========================================" -ForegroundColor Red
+                Write-Host "Gesamt abzulehnende Kategorien: " -ForegroundColor White
+                Write-Host "$($JsonContent.declined_updates.Count)" -ForegroundColor Red
+                Write-Host "Gesamt abzulehnende Produkte: " -ForegroundColor White -NoNewline
+                Write-Host "$TotalDeclinedProducts" -ForegroundColor Red
                 
-                Read-Host "`nDrücken Sie Enter um fortzufahren"
+                Write-Host "`nDrücken Sie Enter um fortzufahren..." -ForegroundColor Gray
+                Read-Host
             }
             
             "2" {
                 # Erlaubte Produkte
-                Write-WSUSLog " " -Status INFO
-                Write-WSUSLog "ERLAUBTE PRODUKTE" -Status SUCCESS
-                Write-WSUSLog "========================================" -Status INFO
+                Clear-Host
+                Write-Host "`n========================================" -ForegroundColor Green
+                Write-Host "         ERLAUBTE PRODUKTE" -ForegroundColor Green
+                Write-Host "========================================`n" -ForegroundColor Green
                 
                 foreach ($category in $JsonContent.approved_updates) {
-                    Write-WSUSLog " " -Status INFO
-                    Write-WSUSLog "Kategorie: $($category.name)" -Status INFO
-                    Write-WSUSLog "Beschreibung: $($category.description)" -Status SUBINFO
-                    Write-WSUSLog "Priorität: $($category.priority)" -Status SUBINFO
-                    Write-WSUSLog "Grund: $($category.reason)" -Status SUBINFO
-                    Write-WSUSLog "Anzahl Produkte: $($category.products.Count)" -Status SUBINFO
+                    Write-Host "$($category.name) - Anzahl Produkte: $($category.products.Count)" -ForegroundColor Yellow
+                    Write-Host "* Beschreibung: $($category.description)" -ForegroundColor Gray
+                    Write-Host "* Grund: $($category.reason)" -ForegroundColor Gray
+                    Write-Host ""
                     
                     if ($EnableFileLogging) {
-                        Write-WSUSLogFile "Kategorie: $($category.name) | Produkte: $($category.products.Count)"
+                        Write-WSUSLogFile "Anzeige erlaubte Kategorie: $($category.name) | Produkte: $($category.products.Count)"
                     }
                 }
                 
-                Write-WSUSLog " " -Status INFO
-                Write-WSUSLog "Gesamt erlaubte Kategorien: $($JsonContent.approved_updates.Count)" -Status SUCCESS
-                
                 $TotalApprovedProducts = ($JsonContent.approved_updates | ForEach-Object { $_.products.Count } | Measure-Object -Sum).Sum
-                Write-WSUSLog "Gesamt erlaubte Produkte: $TotalApprovedProducts" -Status SUCCESS
+                Write-Host "========================================" -ForegroundColor Green
+                Write-Host "Gesamt erlaubte Kategorien: " -ForegroundColor White -NoNewline
+                Write-Host "$($JsonContent.approved_updates.Count)" -ForegroundColor Green
+                Write-Host "Gesamt erlaubte Produkte: " -ForegroundColor White -NoNewline
+                Write-Host "$TotalApprovedProducts" -ForegroundColor Green
                 
-                Read-Host "`nDrücken Sie Enter um fortzufahren"
+                Write-Host "`nDrücken Sie Enter um fortzufahren..." -ForegroundColor Gray
+                Read-Host
             }
             
             "3" {
                 # Statistiken
-                Write-WSUSLog " " -Status INFO
-                Write-WSUSLog "STATISTIKEN" -Status INFO
-                Write-WSUSLog "========================================" -Status INFO
+                Clear-Host
+                Write-Host "`n========================================" -ForegroundColor Cyan
+                Write-Host "           STATISTIKEN" -ForegroundColor Cyan
+                Write-Host "========================================`n" -ForegroundColor Cyan
                 
                 $TotalDeclinedCategories = $JsonContent.declined_updates.Count
                 $TotalApprovedCategories = $JsonContent.approved_updates.Count
                 $TotalDeclinedProducts = ($JsonContent.declined_updates | ForEach-Object { $_.products.Count } | Measure-Object -Sum).Sum
                 $TotalApprovedProducts = ($JsonContent.approved_updates | ForEach-Object { $_.products.Count } | Measure-Object -Sum).Sum
                 
-                Write-WSUSLog " " -Status INFO
-                Write-WSUSLog "Konfigurationsübersicht:" -Status INFO
-                Write-WSUSLog "- Version: $($JsonContent.metadata.version)" -Status SUBINFO
-                Write-WSUSLog "- Letzte Aktualisierung: $($JsonContent.metadata.lastUpdated)" -Status SUBINFO
-                Write-WSUSLog "- Autor: $($JsonContent.metadata.author)" -Status SUBINFO
+                Write-Host "KONFIGURATIONSÜBERSICHT" -ForegroundColor White
+                Write-Host "* Version: " -ForegroundColor White -NoNewline
+                Write-Host "$($JsonContent.metadata.version)" -ForegroundColor Gray
+                Write-Host "* Letzte Aktualisierung: " -ForegroundColor White -NoNewline
+                Write-Host "$($JsonContent.metadata.lastUpdated)" -ForegroundColor Gray
+                Write-Host "* Autor: " -ForegroundColor White -NoNewline
+                Write-Host "$($JsonContent.metadata.author)`n" -ForegroundColor Gray
                 
-                Write-WSUSLog " " -Status INFO
-                Write-WSUSLog "Kategorien:" -Status INFO
-                Write-WSUSLog "- Abzulehnende Kategorien: $TotalDeclinedCategories" -Status WARNING
-                Write-WSUSLog "- Erlaubte Kategorien: $TotalApprovedCategories" -Status SUCCESS
+                Write-Host "KATEGORIEN" -ForegroundColor White
+                Write-Host "* Abzulehnende Kategorien: " -ForegroundColor White -NoNewline
+                Write-Host "$TotalDeclinedCategories" -ForegroundColor Red
+                Write-Host "* Erlaubte Kategorien: " -ForegroundColor White -NoNewline
+                Write-Host "$TotalApprovedCategories`n" -ForegroundColor Green
                 
-                Write-WSUSLog " " -Status INFO
-                Write-WSUSLog "Produkte:" -Status INFO
-                Write-WSUSLog "- Abzulehnende Produkte: $TotalDeclinedProducts" -Status WARNING
-                Write-WSUSLog "- Erlaubte Produkte: $TotalApprovedProducts" -Status SUCCESS
-                Write-WSUSLog "- Gesamt definierte Produkte: $($TotalDeclinedProducts + $TotalApprovedProducts)" -Status INFO
+                Write-Host "PRODUKTE" -ForegroundColor White
+                Write-Host "* Abzulehnende Produkte: " -ForegroundColor White -NoNewline
+                Write-Host "$TotalDeclinedProducts" -ForegroundColor Red
+                Write-Host "* Erlaubte Produkte: " -ForegroundColor White -NoNewline
+                Write-Host "$TotalApprovedProducts" -ForegroundColor Green
+                Write-Host "* Gesamt definierte Produkte: " -ForegroundColor White -NoNewline
+                Write-Host "$($TotalDeclinedProducts + $TotalApprovedProducts)" -ForegroundColor Cyan
                 
-                Read-Host "`nDrücken Sie Enter um fortzufahren"
+                Write-Host "`nDrücken Sie Enter um fortzufahren..." -ForegroundColor Gray
+                Read-Host
             }
             
             "0" {
-                Write-WSUSLog " " -Status INFO
-                Write-WSUSLog "Programm wird beendet..." -Status INFO
+                Write-Host "`nProgramm wird beendet..." -ForegroundColor Yellow
+                Write-WSUSLog "Benutzer hat das Programm beendet" -Status INFO
             }
             
             default {
-                Write-WSUSLog "Ungültige Auswahl. Bitte versuchen Sie es erneut." -Status ERROR
+                Write-Host "`nUngültige Auswahl. Bitte versuchen Sie es erneut." -ForegroundColor Red
                 Start-Sleep -Seconds 2
             }
         }
