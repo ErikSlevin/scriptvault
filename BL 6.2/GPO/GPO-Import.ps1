@@ -6,39 +6,41 @@
     Importiert Group Policy Objects (GPOs) aus Backup-Dateien.
 
 .DESCRIPTION
-    Dieses Tool ermöglicht den Import von GPO-Backups entweder interaktiv oder über Parameter.
-    Es analysiert Backup-Verzeichnisse, extrahiert Metadaten und führt strukturierte Imports durch.
+    Dieses Tool ermoelicht den Import von GPO-Backups entweder interaktiv oder ueber Parameter.
+    Es analysiert Backup-Verzeichnisse, extrahiert Metadaten und fuehrt strukturierte Imports durch.
+    Unterstuetzt Range-Eingaben wie "1-6,9,10,14-22" fuer effiziente Auswahl.
 
 .PARAMETER ImportPath
-    Pfad zu den GPO-Backup-Verzeichnissen. Muss ein gültiges Verzeichnis sein.
+    Pfad zu den GPO-Backup-Verzeichnissen. Muss ein gueltiges Verzeichnis sein.
 
 .PARAMETER GpoNames
     Kommaseparierte Liste der zu importierenden GPO-Namen.
     Wenn nicht angegeben, erfolgt eine interaktive Auswahl.
 
 .PARAMETER Mode
-    Ausführungsmodus: 'Interactive' für Benutzerinteraktion oder 'Silent' für automatische Ausführung.
+    Ausfuehrungsmodus: 'Interactive' fuer Benutzerinteraktion oder 'Silent' fuer automatische Ausfuehrung.
 
 .PARAMETER TargetDomain
-    Zieldomäne für den Import. Wenn nicht angegeben, wird die aktuelle Domäne verwendet.
+    Zieldomaene fuer den Import. Wenn nicht angegeben, wird die aktuelle Domaene verwendet.
 
 .EXAMPLE
-    .\GPO-Import-Optimized.ps1
+    .\GPO-Import-Compatible.ps1
     Startet das Tool im interaktiven Modus.
 
 .EXAMPLE
-    .\GPO-Import-Optimized.ps1 -ImportPath "C:\GPO-Backups"
-    Lädt Backups aus dem angegebenen Pfad und startet interaktive Auswahl.
+    .\GPO-Import-Compatible.ps1 -ImportPath "C:\GPO-Backups"
+    Laedt Backups aus dem angegebenen Pfad und startet interaktive Auswahl.
 
 .EXAMPLE
-    .\GPO-Import-Optimized.ps1 -ImportPath "C:\GPO-Backups" -GpoNames "Default Domain Policy,Custom Policy"
+    .\GPO-Import-Compatible.ps1 -ImportPath "C:\GPO-Backups" -GpoNames "Default Domain Policy,Custom Policy"
     Importiert spezifische GPOs aus dem Backup-Pfad.
 
 .NOTES
-    Version: 2.0
+    Version: 2.1
     Autor: Erik Slevin
     Erstellt: 30.06.2025
-    Benötigt: PowerShell 5.1+, GroupPolicy-Modul, Domain-Admin-Rechte
+    Erweitert: Range-Support fuer Benutzerauswahl, PowerShell 5 Kompatibilitaet
+    Benoetigt: PowerShell 5.1+, GroupPolicy-Modul, Domain-Admin-Rechte
 #>
 
 [CmdletBinding()]
@@ -63,13 +65,13 @@ param(
     [string]$GpoNames,
 
     [Parameter(
-        HelpMessage = "Ausführungsmodus: Interactive oder Silent"
+        HelpMessage = "Ausfuehrungsmodus: Interactive oder Silent"
     )]
     [ValidateSet('Interactive', 'Silent')]
     [string]$Mode = 'Interactive',
 
     [Parameter(
-        HelpMessage = "Zieldomäne für den Import"
+        HelpMessage = "Zieldomaene fuer den Import"
     )]
     [ValidateNotNullOrEmpty()]
     [string]$TargetDomain = $env:USERDNSDOMAIN
@@ -86,27 +88,158 @@ $Script:Config = @{
 }
 
 $Script:Messages = @{
-    Title = "`n       ╔════════════════════════════════════════════════════════════════════════════╗`n       ║                                GPO-Tool: IMPORT                            ║`n       ╚════════════════════════════════════════════════════════════════════════════╝`n"
+    Title = "`nGPO IMPORT TOOL`n---------------------`nExportiert GPO´s aus der aktuellen Domaene`n"
     SearchingBackups = "Suche nach GPO-Backup-Verzeichnissen in: {0}"
     FoundDirectories = "Gefundene Verzeichnisse: {0}"
     AnalyzingBackups = "`nAnalysiere Backup-Verzeichnisse..."
     ImportStarting = "`n=== Import wird gestartet ==="
     ImportCompleted = "`n=== Import abgeschlossen ==="
     ImportingGpo = "Importiere GPO: {0}..."
-    ImportSuccess = "  ✓ Erfolgreich importiert"
-    ImportError = "  ✗ Import fehlgeschlagen: {0}"
+    ImportSuccess = "  [OK] Erfolgreich importiert"
+    ImportError = "  [FEHLER] Import fehlgeschlagen: {0}"
     ValidationError = "FEHLER: {0}"
     UserCancelled = "Vorgang wurde vom Benutzer abgebrochen."
-    NoValidBackups = "Keine gültigen GPO-Backups gefunden!"
-    BackupAnalysisSuccess = "  ✓ {0}"
-    BackupAnalysisWarning = "  ⚠ {0} - {1}"
-    BackupAnalysisError = "  ✗ {0} - Fehler: {1}"
+    NoValidBackups = "Keine gueltigen GPO-Backups gefunden!"
+    BackupAnalysisSuccess = "  [OK] {0}"
+    BackupAnalysisWarning = "  [WARNUNG] {0} - {1}"
+    BackupAnalysisError = "  [FEHLER] {0} - Fehler: {1}"
 }
 
 $Script:XmlNamespaces = @{
     BackupScheme = 'GroupPolicyBackupScheme'
     GpoObject = 'GroupPolicyObject'
     CoreSettings = 'GroupPolicyCoreSettings'
+}
+#endregion
+
+#region Range-Parser Hilfsfunktion
+function Expand-NumberRanges {
+    <#
+    .SYNOPSIS
+        Erweitert Zahlenbereichs-Eingaben zu einer Liste von Einzelnummern.
+    
+    .DESCRIPTION
+        Parst Eingaben wie "1-6,9,10,14-22" und gibt eine Liste aller enthaltenen Nummern zurueck.
+        Unterstuetzt sowohl Einzelnummern als auch Bereiche (mit Bindestrich getrennt).
+    
+    .PARAMETER InputString
+        Die zu parsende Eingabezeichenkette mit Nummern und Bereichen.
+    
+    .PARAMETER MaxValue
+        Der maximale gueltige Wert (fuer Validierung).
+    
+    .PARAMETER MinValue
+        Der minimale gueltige Wert (fuer Validierung).
+    
+    .EXAMPLE
+        Expand-NumberRanges -InputString "1-6,9,10,14-22" -MaxValue 25
+        Gibt zurueck: 1,2,3,4,5,6,9,10,14,15,16,17,18,19,20,21,22
+    
+    .OUTPUTS
+        [int[]] Array mit allen expandierten Nummern, sortiert und ohne Duplikate.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string]$InputString,
+        
+        [Parameter(Mandatory)]
+        [int]$MaxValue,
+        
+        [int]$MinValue = 1
+    )
+    
+    try {
+        # Eingabe bereinigen (Leerzeichen entfernen)
+        $cleanInput = $InputString -replace '\s+', ''
+        
+        if ([string]::IsNullOrEmpty($cleanInput)) {
+            throw "Eingabe ist leer"
+        }
+        
+        # Aufteilen nach Kommas
+        $segments = $cleanInput.Split(',', [StringSplitOptions]::RemoveEmptyEntries)
+        
+        if ($segments.Count -eq 0) {
+            throw "Keine gueltigen Segmente gefunden"
+        }
+        
+        $expandedNumbers = @()
+        
+        foreach ($segment in $segments) {
+            if ([string]::IsNullOrEmpty($segment)) {
+                continue
+            }
+            
+            # Pruefen ob es sich um einen Bereich handelt (enthaelt Bindestrich)
+            if ($segment.Contains('-')) {
+                # Range verarbeiten
+                $rangeParts = $segment.Split('-', [StringSplitOptions]::RemoveEmptyEntries)
+                
+                if ($rangeParts.Count -ne 2) {
+                    throw "Ungueltiger Bereich: '$segment'. Format sollte sein: 'Start-Ende'"
+                }
+                
+                # Start- und Endwerte parsen
+                [int]$rangeStart = 0
+                [int]$rangeEnd = 0
+                
+                if (-not [int]::TryParse($rangeParts[0], [ref]$rangeStart)) {
+                    throw "Ungueltiger Startwert in Bereich '$segment': '$($rangeParts[0])'"
+                }
+                
+                if (-not [int]::TryParse($rangeParts[1], [ref]$rangeEnd)) {
+                    throw "Ungueltiger Endwert in Bereich '$segment': '$($rangeParts[1])'"
+                }
+                
+                # Validierung der Reihenfolge
+                if ($rangeStart -gt $rangeEnd) {
+                    throw "Ungueltiger Bereich '$segment': Startwert ($rangeStart) ist groesser als Endwert ($rangeEnd)"
+                }
+                
+                # Validierung der Grenzen
+                if ($rangeStart -lt $MinValue -or $rangeStart -gt $MaxValue) {
+                    throw "Startwert '$rangeStart' in Bereich '$segment' ist ausserhalb des gueltigen Bereichs ($MinValue-$MaxValue)"
+                }
+                
+                if ($rangeEnd -lt $MinValue -or $rangeEnd -gt $MaxValue) {
+                    throw "Endwert '$rangeEnd' in Bereich '$segment' ist ausserhalb des gueltigen Bereichs ($MinValue-$MaxValue)"
+                }
+                
+                # Bereich expandieren
+                for ($i = $rangeStart; $i -le $rangeEnd; $i++) {
+                    $expandedNumbers += $i
+                }
+            }
+            else {
+                # Einzelne Nummer verarbeiten
+                [int]$singleNumber = 0
+                
+                if (-not [int]::TryParse($segment, [ref]$singleNumber)) {
+                    throw "Ungueltige Nummer: '$segment'"
+                }
+                
+                # Validierung der Grenzen
+                if ($singleNumber -lt $MinValue -or $singleNumber -gt $MaxValue) {
+                    throw "Nummer '$singleNumber' ist ausserhalb des gueltigen Bereichs ($MinValue-$MaxValue)"
+                }
+                
+                $expandedNumbers += $singleNumber
+            }
+        }
+        
+        if ($expandedNumbers.Count -eq 0) {
+            throw "Keine gueltigen Nummern gefunden"
+        }
+        
+        # Duplikate entfernen und sortieren
+        $uniqueNumbers = $expandedNumbers | Sort-Object -Unique
+        
+        return $uniqueNumbers
+    }
+    catch {
+        throw "Fehler beim Parsen der Eingabe '$InputString': $($_.Exception.Message)"
+    }
 }
 #endregion
 
@@ -129,7 +262,7 @@ class GpoBackupInfo {
 }
 #endregion
 
-#region Hilfsfunktionen für Präsentation
+#region Hilfsfunktionen fuer Praesentation
 function Write-ToolHeader {
     <#
     .SYNOPSIS
@@ -171,17 +304,28 @@ function Write-GpoBackupList {
         [Parameter(Mandatory)]
         [GpoBackupInfo[]]$BackupList,
         
-        [string]$Title = "Verfügbare GPO-Backups (neueste zuerst)"
+        [string]$Title = "Verfuegbare GPO-Backups (neueste zuerst)"
     )
     
-    Write-StatusMessage "`n=== $Title ===" -Type Info
+    Write-StatusMessage "`n=== $Title ===`n" -Type Info
     
     for ($i = 0; $i -lt $BackupList.Count; $i++) {
         $backup = $BackupList[$i]
-        Write-Host "$($i + 1). $($backup.DisplayName)" -ForegroundColor White
-        Write-Host "   Backup-Zeit: $($backup.BackupTime.ToString('yyyy-MM-dd HH:mm:ss'))" -ForegroundColor Gray
-        Write-Host "   Backup-ID: $($backup.BackupId)" -ForegroundColor Gray
-        Write-Host ""
+
+        $displayText = "$($i + 1). $($backup.DisplayName)"
+        $timeText = " vom $($backup.BackupTime.ToString('dd.MM.yy HH:mm'))"
+        
+        Write-Host $displayText -ForegroundColor White -NoNewline
+        Write-Host $timeText -ForegroundColor DarkGray
+
+    }
+    
+    Write-Host ""
+    # Beispiele fuer Range-Eingaben anzeigen
+    if ($Title -eq "Verfuegbare GPO-Backups (neueste zuerst)") {
+        Write-Host "Eingabebeispiele:" -ForegroundColor Yellow
+        Write-Host "  Einzeln:      1,3,5" -ForegroundColor Gray
+        Write-Host "  Kombiniert:   1-3,7,10-12,15" -ForegroundColor Gray
     }
 }
 
@@ -213,7 +357,7 @@ function Write-ImportSummary {
         }
     }
     
-    Write-StatusMessage "Zieldomäne: $Domain" -Type Info
+    Write-StatusMessage "Zieldomaene: $Domain" -Type Info
 }
 #endregion
 
@@ -259,7 +403,7 @@ function Get-GpoBackupMetadata {
         [xml]$backupXml = Get-Content $BackupXmlPath -Encoding UTF8 -ErrorAction Stop
         
         if (-not $backupXml.($Script:XmlNamespaces.BackupScheme)) {
-            throw "Ungültiges Backup.xml Format - GroupPolicyBackupScheme nicht gefunden"
+            throw "Ungueltiges Backup.xml Format - GroupPolicyBackupScheme nicht gefunden"
         }
         
         $gpoObject = $backupXml.($Script:XmlNamespaces.BackupScheme).($Script:XmlNamespaces.GpoObject)
@@ -281,7 +425,7 @@ function Get-GpoBackupMetadata {
             throw "DisplayName konnte nicht extrahiert werden"
         }
         
-        # Ergebnis-Objekt zurückgeben
+        # Ergebnis-Objekt zurueckgeben
         return @{
             DisplayName = $displayName
             CreatedTime = $createdTime
@@ -311,7 +455,7 @@ function Get-ImportPathFromUser {
     do {
         $path = Read-Host "Pfad zu den GPO-Backups eingeben"
         if ([string]::IsNullOrWhiteSpace($path)) {
-            Write-StatusMessage "Ungültiger Pfad. Bitte einen gültigen Pfad eingeben." -Type Warning
+            Write-StatusMessage "Ungueltiger Pfad. Bitte einen gueltigen Pfad eingeben." -Type Warning
             $validPath = $false
         }
         elseif (-not (Test-Path $path -PathType Container)) {
@@ -345,8 +489,7 @@ function Get-GpoBackupDirectories {
         throw "Keine Unterverzeichnisse im angegebenen Pfad gefunden."
     }
     
-    Write-StatusMessage ($Script:Messages.FoundDirectories -f $backupDirectories.Count) -Type Success
-    Write-StatusMessage $Script:Messages.AnalyzingBackups -Type Info
+    Clear-Host
     
     # Backup-Informationen sammeln
     $validBackups = @()
@@ -376,8 +519,6 @@ function Get-GpoBackupDirectories {
                 
                 $backupInfo.IsValid = $true
                 $validBackups += $backupInfo
-                
-                Write-StatusMessage ($Script:Messages.BackupAnalysisSuccess -f $backupInfo.DisplayName) -Type Success
             } else {
                 $backupInfo.ErrorMessage = $metadata.ErrorMessage
                 Write-StatusMessage ($Script:Messages.BackupAnalysisWarning -f $directory.Name, "Metadaten konnten nicht gelesen werden") -Type Warning
@@ -399,7 +540,7 @@ function Get-GpoBackupDirectories {
 function Get-UserSelectedBackups {
     <#
     .SYNOPSIS
-        Ermöglicht die interaktive Auswahl von GPO-Backups durch den Benutzer.
+        Ermoelicht die interaktive Auswahl von GPO-Backups durch den Benutzer mit Range-Unterstuetzung.
     #>
     param(
         [Parameter(Mandatory)]
@@ -409,32 +550,30 @@ function Get-UserSelectedBackups {
     Write-GpoBackupList -BackupList $AvailableBackups
     
     do {
-        $userInput = Read-Host "Nummer(n) der zu importierenden GPOs (kommasepariert, z.B. 1,3,5)"
-        $selectedNumbers = $userInput.Split(',') | ForEach-Object { 
-            $trimmed = $_.Trim()
-            [int]$number = 0
-            if ([int]::TryParse($trimmed, [ref]$number)) {
-                $number
-            }
-        }
+        $userInput = Read-Host "`nNummer(n) der zu importierenden GPOs (z.B. 1,3,5 oder 1-6,9,12-15)"
         
-        $isValidSelection = $selectedNumbers | ForEach-Object {
-            $_ -ge 1 -and $_ -le $AvailableBackups.Count
-        }
-        
-        if ($isValidSelection -contains $false) {
-            Write-StatusMessage "Ungültige Auswahl. Bitte wählen Sie Nummern zwischen 1 und $($AvailableBackups.Count)." -Type Warning
-            $validInput = $false
-        } else {
+        try {
+            $selectedNumbers = Expand-NumberRanges -InputString $userInput -MaxValue $AvailableBackups.Count -MinValue 1
             $validInput = $true
+            
+            Write-StatusMessage "Erweiterte Auswahl: $($selectedNumbers -join ',')" -Type Info
+        }
+        catch {
+            Write-StatusMessage "Ungueltige Eingabe: $($_.Exception.Message)" -Type Warning
+            Write-StatusMessage "Bitte verwenden Sie das Format: 1,3,5 oder 1-6,9,12-15" -Type Info
+            $validInput = $false
         }
     } while (-not $validInput)
     
-    # Ausgewählte Backups zurückgeben
+
+    Clear-Host
+    Write-Host ""
+
+    # Ausgewaehlte Backups zurueckgeben
     $selectedBackups = $selectedNumbers | ForEach-Object { $AvailableBackups[$_ - 1] }
     
-    # Auswahl bestätigen
-    Write-GpoBackupList -BackupList $selectedBackups -Title "Ausgewählte GPOs für Import"
+    # Auswahl bestaetigen
+    Write-GpoBackupList -BackupList $selectedBackups -Title "Ausgewaehlte GPOs fuer Import"
     
     $confirmation = Read-Host "`nImport starten? (J/N)"
     if ($confirmation -notmatch $Script:Config.ConfirmationPattern) {
@@ -488,7 +627,7 @@ function Get-BackupsByNames {
 function Initialize-GroupPolicyModule {
     <#
     .SYNOPSIS
-        Lädt und initialisiert das GroupPolicy-Modul.
+        Laedt und initialisiert das GroupPolicy-Modul.
     #>
     try {
         Import-Module GroupPolicy -ErrorAction Stop
@@ -502,7 +641,7 @@ function Initialize-GroupPolicyModule {
 function Import-GpoBackups {
     <#
     .SYNOPSIS
-        Führt den eigentlichen Import der ausgewählten GPO-Backups durch.
+        Fuehrt den eigentlichen Import der ausgewaehlten GPO-Backups durch.
     #>
     param(
         [Parameter(Mandatory)]
@@ -530,7 +669,7 @@ function Import-GpoBackups {
         $importSuccessful = $false
         $lastError = $null
         
-        # Retry-Logik für robusteren Import
+        # Retry-Logik fuer robusteren Import
         while ($attemptCount -lt $Script:Config.MaxRetryAttempts -and -not $importSuccessful) {
             $attemptCount++
             
@@ -559,7 +698,7 @@ function Import-GpoBackups {
                 $lastError = $_.Exception.Message
                 
                 if ($attemptCount -lt $Script:Config.MaxRetryAttempts) {
-                    Write-StatusMessage "  ⚠ Versuch $attemptCount fehlgeschlagen, wiederhole..." -Type Warning
+                    Write-StatusMessage "  [WARNUNG] Versuch $attemptCount fehlgeschlagen, wiederhole..." -Type Warning
                     Start-Sleep -Seconds 2
                 }
             }
@@ -611,9 +750,9 @@ function Start-GpoImportProcess {
         if (-not $ImportPath -and $GpoNames) {
             Write-StatusMessage "FEHLER: Wenn GPO-Namen angegeben werden, muss auch der Import-Pfad angegeben werden!" -Type Error
             Write-StatusMessage "`nVerwendung:" -Type Info
-            Write-StatusMessage "  Komplett interaktiv:  .\GPO-Import-Optimized.ps1" -Type Info
-            Write-StatusMessage "  Mit Pfad:             .\GPO-Import-Optimized.ps1 -ImportPath `"C:\GPO-Backups`"" -Type Info
-            Write-StatusMessage "  Mit Parametern:       .\GPO-Import-Optimized.ps1 -ImportPath `"C:\GPO-Backups`" -GpoNames `"Name1,Name2`"" -Type Info
+            Write-StatusMessage "  Komplett interaktiv:  .\GPO-Import-Compatible.ps1" -Type Info
+            Write-StatusMessage "  Mit Pfad:             .\GPO-Import-Compatible.ps1 -ImportPath `"C:\GPO-Backups`"" -Type Info
+            Write-StatusMessage "  Mit Parametern:       .\GPO-Import-Compatible.ps1 -ImportPath `"C:\GPO-Backups`" -GpoNames `"Name1,Name2`"" -Type Info
             exit 1
         }
         
@@ -625,10 +764,10 @@ function Start-GpoImportProcess {
             $ImportPath = Get-ImportPathFromUser
         }
         
-        # Verfügbare Backups analysieren
+        # Verfuegbare Backups analysieren
         $availableBackups = Get-GpoBackupDirectories -SearchPath $ImportPath
         
-        # GPO-Backups für Import auswählen
+        # GPO-Backups fuer Import auswaehlen
         if ($GpoNames) {
             # Parameter-Modus: Backups nach Namen suchen
             $selectedBackups = Get-BackupsByNames -GpoNameList $GpoNames -AvailableBackups $availableBackups
@@ -640,7 +779,7 @@ function Start-GpoImportProcess {
             }
         }
         
-        # Import durchführen
+        # Import durchfuehren
         $importResult = Import-GpoBackups -BackupsToImport $selectedBackups -SourcePath $ImportPath -Domain $TargetDomain
         
         # Zusammenfassung anzeigen
@@ -648,7 +787,7 @@ function Start-GpoImportProcess {
         
         # Bei interaktivem Modus auf Eingabe warten
         if ($Mode -eq 'Interactive') {
-            Read-Host "`nDrücken Sie Enter zum Beenden"
+            Read-Host "`nDruecken Sie Enter zum Beenden"
         }
         
         exit 0
@@ -656,12 +795,12 @@ function Start-GpoImportProcess {
     catch {
         Write-StatusMessage "Kritischer Fehler: $($_.Exception.Message)" -Type Error
         if ($Mode -eq 'Interactive') {
-            Read-Host "`nDrücken Sie Enter zum Beenden"
+            Read-Host "`nDruecken Sie Enter zum Beenden"
         }
         exit 1
     }
 }
 
-# Hauptprogramm ausführen
+# Hauptprogramm ausfuehren
 Start-GpoImportProcess
 #endregion
