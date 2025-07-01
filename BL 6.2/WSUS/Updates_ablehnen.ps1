@@ -367,12 +367,10 @@ $script:WSUSServer = $null
 #region Hauptprogramm
 try {
     # Begrüßung
-    Clear-Host
-    Write-Host -Foregroundcolor Green "`nWSUS Update Tool by Zwote 381"
-    Write-Host -Foregroundcolor Green "-----------------------------"
-    Write-Host -Foregroundcolor Green "Updates Verwaltung leicht gemacht`n"
+    Write-WSUSLog "========================================" -Status INFO
     Write-WSUSLog "WSUS-Management Script gestartet" -Status SUCCESS
-    Write-WSUSLog "Modus: $Mode" -Status SUBINFO
+    Write-WSUSLog "========================================" -Status INFO
+    Write-WSUSLog "Modus: $Mode" -Status INFO
     
     # Optionales File-Logging
     if ($EnableFileLogging) {
@@ -381,7 +379,7 @@ try {
     }
     
     # WSUS-Server Verbindung herstellen
-    Write-WSUSLog "Stelle Verbindung zum WSUS-Server her..." -Status SUBINFO
+    Write-WSUSLog "Stelle Verbindung zum WSUS-Server her..." -Status INFO
     
     $ConnectionParams = @{
         Mode = $Mode
@@ -399,11 +397,13 @@ try {
     }
     
     # Server-Informationen anzeigen
-    Write-WSUSLog "WSUS-Server Informationen:" -Status SUBINFO
-    Write-WSUSLog "   - Name: $($script:WSUSServer.Name)" -Status SUBINFO
-    Write-WSUSLog "   - Port: $($script:WSUSServer.PortNumber)" -Status SUBINFO
-    Write-WSUSLog "   - SSL: $($script:WSUSServer.UseSecureConnection)" -Status SUBINFO
-    Write-WSUSLog "   - Version: $($script:WSUSServer.Version)" -Status SUBINFO
+    Write-WSUSLog "========================================" -Status INFO
+    Write-WSUSLog "WSUS-Server Informationen:" -Status INFO
+    Write-WSUSLog "Name: $($script:WSUSServer.Name)" -Status SUBINFO
+    Write-WSUSLog "Port: $($script:WSUSServer.PortNumber)" -Status SUBINFO
+    Write-WSUSLog "SSL: $($script:WSUSServer.UseSecureConnection)" -Status SUBINFO
+    Write-WSUSLog "Version: $($script:WSUSServer.Version)" -Status SUBINFO
+    Write-WSUSLog "========================================" -Status INFO
     
     # Optional: Server-Info in Logdatei schreiben
     if ($EnableFileLogging) {
@@ -411,10 +411,145 @@ try {
     }
     
     # ========================================
-    # HIER WEITERE FUNKTIONEN EINFÜGEN
+    # HAUPTMENÜ
     # ========================================
     
-    Write-WSUSLog "Grundgerüst bereit für weitere Funktionen" -Status SUCCESS
+    # JSON-Datei laden
+    $JsonPath = Join-Path -Path $PSScriptRoot -ChildPath "abzulehnende_produkte.json"
+    
+    if (-not (Test-Path -Path $JsonPath)) {
+        throw "JSON-Datei nicht gefunden: $JsonPath"
+    }
+    
+    Write-WSUSLog "Lade Konfigurationsdatei..." -Status INFO
+    
+    try {
+        $JsonContent = Get-Content -Path $JsonPath -Raw | ConvertFrom-Json
+        Write-WSUSLog "Konfiguration erfolgreich geladen" -Status SUCCESS
+        Write-WSUSLog "Version: $($JsonContent.metadata.version)" -Status SUBINFO
+        Write-WSUSLog "Letzte Aktualisierung: $($JsonContent.metadata.lastUpdated)" -Status SUBINFO
+    }
+    catch {
+        throw "Fehler beim Laden der JSON-Datei: $($_.Exception.Message)"
+    }
+    
+    # Menü anzeigen
+    do {
+        Write-WSUSLog " " -Status INFO
+        Write-WSUSLog "========================================" -Status INFO
+        Write-WSUSLog "HAUPTMENÜ" -Status INFO
+        Write-WSUSLog "========================================" -Status INFO
+        Write-WSUSLog " " -Status INFO
+        Write-WSUSLog "1. Abzulehnende Produkte verwalten" -Status INFO
+        Write-WSUSLog "2. Erlaubte Produkte verwalten" -Status INFO
+        Write-WSUSLog "3. Statistiken anzeigen" -Status INFO
+        Write-WSUSLog " " -Status INFO
+        Write-WSUSLog "0. Beenden" -Status INFO
+        Write-WSUSLog " " -Status INFO
+        Write-WSUSLog "========================================" -Status INFO
+        
+        $UserChoice = Read-Host "Bitte wählen Sie eine Option"
+        
+        switch ($UserChoice) {
+            "1" {
+                # Abzulehnende Produkte
+                Write-WSUSLog " " -Status INFO
+                Write-WSUSLog "ABZULEHNENDE PRODUKTE" -Status WARNING
+                Write-WSUSLog "========================================" -Status INFO
+                
+                foreach ($category in $JsonContent.declined_updates) {
+                    Write-WSUSLog " " -Status INFO
+                    Write-WSUSLog "Kategorie: $($category.name)" -Status INFO
+                    Write-WSUSLog "Beschreibung: $($category.description)" -Status SUBINFO
+                    Write-WSUSLog "Priorität: $($category.priority)" -Status SUBINFO
+                    Write-WSUSLog "Grund: $($category.reason)" -Status SUBINFO
+                    Write-WSUSLog "Anzahl Produkte: $($category.products.Count)" -Status SUBINFO
+                    
+                    if ($EnableFileLogging) {
+                        Write-WSUSLogFile "Kategorie: $($category.name) | Produkte: $($category.products.Count)"
+                    }
+                }
+                
+                Write-WSUSLog " " -Status INFO
+                Write-WSUSLog "Gesamt abzulehnende Kategorien: $($JsonContent.declined_updates.Count)" -Status WARNING
+                
+                $TotalDeclinedProducts = ($JsonContent.declined_updates | ForEach-Object { $_.products.Count } | Measure-Object -Sum).Sum
+                Write-WSUSLog "Gesamt abzulehnende Produkte: $TotalDeclinedProducts" -Status WARNING
+                
+                Read-Host "`nDrücken Sie Enter um fortzufahren"
+            }
+            
+            "2" {
+                # Erlaubte Produkte
+                Write-WSUSLog " " -Status INFO
+                Write-WSUSLog "ERLAUBTE PRODUKTE" -Status SUCCESS
+                Write-WSUSLog "========================================" -Status INFO
+                
+                foreach ($category in $JsonContent.approved_updates) {
+                    Write-WSUSLog " " -Status INFO
+                    Write-WSUSLog "Kategorie: $($category.name)" -Status INFO
+                    Write-WSUSLog "Beschreibung: $($category.description)" -Status SUBINFO
+                    Write-WSUSLog "Priorität: $($category.priority)" -Status SUBINFO
+                    Write-WSUSLog "Grund: $($category.reason)" -Status SUBINFO
+                    Write-WSUSLog "Anzahl Produkte: $($category.products.Count)" -Status SUBINFO
+                    
+                    if ($EnableFileLogging) {
+                        Write-WSUSLogFile "Kategorie: $($category.name) | Produkte: $($category.products.Count)"
+                    }
+                }
+                
+                Write-WSUSLog " " -Status INFO
+                Write-WSUSLog "Gesamt erlaubte Kategorien: $($JsonContent.approved_updates.Count)" -Status SUCCESS
+                
+                $TotalApprovedProducts = ($JsonContent.approved_updates | ForEach-Object { $_.products.Count } | Measure-Object -Sum).Sum
+                Write-WSUSLog "Gesamt erlaubte Produkte: $TotalApprovedProducts" -Status SUCCESS
+                
+                Read-Host "`nDrücken Sie Enter um fortzufahren"
+            }
+            
+            "3" {
+                # Statistiken
+                Write-WSUSLog " " -Status INFO
+                Write-WSUSLog "STATISTIKEN" -Status INFO
+                Write-WSUSLog "========================================" -Status INFO
+                
+                $TotalDeclinedCategories = $JsonContent.declined_updates.Count
+                $TotalApprovedCategories = $JsonContent.approved_updates.Count
+                $TotalDeclinedProducts = ($JsonContent.declined_updates | ForEach-Object { $_.products.Count } | Measure-Object -Sum).Sum
+                $TotalApprovedProducts = ($JsonContent.approved_updates | ForEach-Object { $_.products.Count } | Measure-Object -Sum).Sum
+                
+                Write-WSUSLog " " -Status INFO
+                Write-WSUSLog "Konfigurationsübersicht:" -Status INFO
+                Write-WSUSLog "- Version: $($JsonContent.metadata.version)" -Status SUBINFO
+                Write-WSUSLog "- Letzte Aktualisierung: $($JsonContent.metadata.lastUpdated)" -Status SUBINFO
+                Write-WSUSLog "- Autor: $($JsonContent.metadata.author)" -Status SUBINFO
+                
+                Write-WSUSLog " " -Status INFO
+                Write-WSUSLog "Kategorien:" -Status INFO
+                Write-WSUSLog "- Abzulehnende Kategorien: $TotalDeclinedCategories" -Status WARNING
+                Write-WSUSLog "- Erlaubte Kategorien: $TotalApprovedCategories" -Status SUCCESS
+                
+                Write-WSUSLog " " -Status INFO
+                Write-WSUSLog "Produkte:" -Status INFO
+                Write-WSUSLog "- Abzulehnende Produkte: $TotalDeclinedProducts" -Status WARNING
+                Write-WSUSLog "- Erlaubte Produkte: $TotalApprovedProducts" -Status SUCCESS
+                Write-WSUSLog "- Gesamt definierte Produkte: $($TotalDeclinedProducts + $TotalApprovedProducts)" -Status INFO
+                
+                Read-Host "`nDrücken Sie Enter um fortzufahren"
+            }
+            
+            "0" {
+                Write-WSUSLog " " -Status INFO
+                Write-WSUSLog "Programm wird beendet..." -Status INFO
+            }
+            
+            default {
+                Write-WSUSLog "Ungültige Auswahl. Bitte versuchen Sie es erneut." -Status ERROR
+                Start-Sleep -Seconds 2
+            }
+        }
+        
+    } while ($UserChoice -ne "0")
     
 }
 catch {
@@ -435,7 +570,10 @@ finally {
     $EndTime = Get-Date
     $Duration = $EndTime - $script:StartTime
     
-    Write-WSUSLog "Script beendet - Laufzeit: $($Duration.ToString('hh\:mm\:ss'))" -Status INFO
+    Write-WSUSLog "========================================" -Status INFO
+    Write-WSUSLog "Script beendet" -Status INFO
+    Write-WSUSLog "Laufzeit: $($Duration.ToString('hh\:mm\:ss'))" -Status INFO
+    Write-WSUSLog "========================================" -Status INFO
     
     if ($EnableFileLogging) {
         Write-WSUSLogFile "Script beendet - Laufzeit: $($Duration.ToString('hh\:mm\:ss'))"
