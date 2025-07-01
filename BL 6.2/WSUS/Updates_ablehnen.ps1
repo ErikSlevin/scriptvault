@@ -454,14 +454,15 @@ try {
             "1" {
                 # Abzulehnende Produkte
                 Clear-Host
-                Write-Host "`n========================================" -ForegroundColor Red
-                Write-Host "       ABZULEHNENDE PRODUKTE" -ForegroundColor Red
-                Write-Host "========================================`n" -ForegroundColor Red
+                Write-Host "`n========================================" -ForegroundColor Cyan
+                Write-Host "  ABZULEHNENDE PRODUKTE" -ForegroundColor Cyan
+                Write-Host "  Konfiguration gem.  $JsonPath" -Foregroundcolor Gray
+                Write-Host "========================================`n" -ForegroundColor Cyan
                 
                 foreach ($category in $JsonContent.declined_updates) {
-                    Write-Host "$($category.name) - Anzahl Produkte: $($category.products.Count)" -ForegroundColor Yellow
-                    Write-Host "* Beschreibung: $($category.description)" -ForegroundColor Gray
-                    Write-Host "* Grund: $($category.reason)" -ForegroundColor Gray
+                    Write-Host "  $($category.name) - Anzahl Produkte: $($category.products.Count)" -ForegroundColor White
+                    Write-Host "  - Beschreibung: $($category.description)" -ForegroundColor Gray
+                    Write-Host "  - Grund: $($category.reason)" -ForegroundColor Gray
                     Write-Host ""
                     
                     
@@ -471,11 +472,9 @@ try {
                 }
                 
                 $TotalDeclinedProducts = ($JsonContent.declined_updates | ForEach-Object { $_.products.Count } | Measure-Object -Sum).Sum
-                Write-Host "========================================" -ForegroundColor Red
-                Write-Host "Gesamt abzulehnende Kategorien: " -ForegroundColor White
-                Write-Host "$($JsonContent.declined_updates.Count)" -ForegroundColor Red
-                Write-Host "Gesamt abzulehnende Produkte: " -ForegroundColor White -NoNewline
-                Write-Host "$TotalDeclinedProducts" -ForegroundColor Red
+                Write-Host ""
+                Write-Host "Gesamt abzulehnende Kategorien: $($JsonContent.declined_updates.Count)" -ForegroundColor red
+                Write-Host "Gesamt abzulehnende Produkte: $TotalDeclinedProducts" -ForegroundColor red
                 
                 Write-Host "`nDrücken Sie Enter um fortzufahren..." -ForegroundColor Gray
                 Read-Host
@@ -484,14 +483,15 @@ try {
             "2" {
                 # Erlaubte Produkte
                 Clear-Host
-                Write-Host "`n========================================" -ForegroundColor Green
-                Write-Host "         ERLAUBTE PRODUKTE" -ForegroundColor Green
-                Write-Host "========================================`n" -ForegroundColor Green
+                Write-Host "`n========================================" -ForegroundColor Cyan
+                Write-Host "  ERLAUBTE PRODUKTE" -ForegroundColor Cyan
+                Write-Host "  Konfiguration gem.  $JsonPath" -Foregroundcolor Gray
+                Write-Host "========================================`n" -ForegroundColor Cyan
                 
                 foreach ($category in $JsonContent.approved_updates) {
-                    Write-Host "$($category.name) - Anzahl Produkte: $($category.products.Count)" -ForegroundColor Yellow
-                    Write-Host "* Beschreibung: $($category.description)" -ForegroundColor Gray
-                    Write-Host "* Grund: $($category.reason)" -ForegroundColor Gray
+                    Write-Host "  $($category.name) - Anzahl Produkte: $($category.products.Count)" -ForegroundColor White
+                    Write-Host "  - Beschreibung: $($category.description)" -ForegroundColor Gray
+                    Write-Host "  - Grund: $($category.reason)" -ForegroundColor Gray
                     Write-Host ""
                     
                     if ($EnableFileLogging) {
@@ -500,11 +500,9 @@ try {
                 }
                 
                 $TotalApprovedProducts = ($JsonContent.approved_updates | ForEach-Object { $_.products.Count } | Measure-Object -Sum).Sum
-                Write-Host "========================================" -ForegroundColor Green
-                Write-Host "Gesamt erlaubte Kategorien: " -ForegroundColor White -NoNewline
-                Write-Host "$($JsonContent.approved_updates.Count)" -ForegroundColor Green
-                Write-Host "Gesamt erlaubte Produkte: " -ForegroundColor White -NoNewline
-                Write-Host "$TotalApprovedProducts" -ForegroundColor Green
+                Write-Host ""
+                Write-Host "Gesamt erlaubte Kategorien: $($JsonContent.approved_updates.Count)" -ForegroundColor Green
+                Write-Host "Gesamt erlaubte Produkte: $TotalApprovedProducts" -ForegroundColor Green
                 
                 Write-Host "`nDrücken Sie Enter um fortzufahren..." -ForegroundColor Gray
                 Read-Host
@@ -514,7 +512,8 @@ try {
                 # Statistiken
                 Clear-Host
                 Write-Host "`n========================================" -ForegroundColor Cyan
-                Write-Host "           STATISTIKEN" -ForegroundColor Cyan
+                Write-Host "  STATISTIKEN" -ForegroundColor Cyan
+                Write-Host "  Konfiguration gem.  $JsonPath" -Foregroundcolor Gray
                 Write-Host "========================================`n" -ForegroundColor Cyan
                 
                 $TotalDeclinedCategories = $JsonContent.declined_updates.Count
@@ -522,29 +521,21 @@ try {
                 $TotalDeclinedProducts = ($JsonContent.declined_updates | ForEach-Object { $_.products.Count } | Measure-Object -Sum).Sum
                 $TotalApprovedProducts = ($JsonContent.approved_updates | ForEach-Object { $_.products.Count } | Measure-Object -Sum).Sum
                 
-                Write-Host "KONFIGURATIONSÜBERSICHT" -ForegroundColor White
-                Write-Host "* Version: " -ForegroundColor White -NoNewline
-                Write-Host "$($JsonContent.metadata.version)" -ForegroundColor Gray
-                Write-Host "* Letzte Aktualisierung: " -ForegroundColor White -NoNewline
-                Write-Host "$($JsonContent.metadata.lastUpdated)" -ForegroundColor Gray
-                Write-Host "* Autor: " -ForegroundColor White -NoNewline
-                Write-Host "$($JsonContent.metadata.author)`n" -ForegroundColor Gray
+                Write-Host "  KONFIGURATIONSÜBERSICHT" -ForegroundColor White
+                Write-Host "  * Version: $($JsonContent.metadata.version)" -ForegroundColor Gray
+                Write-Host "  * Letzte Aktualisierung: $($JsonContent.metadata.lastUpdated)" -ForegroundColor Gray
+                Write-Host "  * Autor: $($JsonContent.metadata.author)`n" -ForegroundColor Gray
                 
-                Write-Host "KATEGORIEN" -ForegroundColor White
-                Write-Host "* Abzulehnende Kategorien: " -ForegroundColor White -NoNewline
-                Write-Host "$TotalDeclinedCategories" -ForegroundColor Red
-                Write-Host "* Erlaubte Kategorien: " -ForegroundColor White -NoNewline
-                Write-Host "$TotalApprovedCategories`n" -ForegroundColor Green
+                Write-Host "  KATEGORIEN" -ForegroundColor White
+                Write-Host "  * Abzulehnende Kategorien: $TotalDeclinedCategories" -ForegroundColor Gray
+                Write-Host "  * Erlaubte Kategorien: $TotalApprovedCategories`n" -ForegroundColor Gray
                 
-                Write-Host "PRODUKTE" -ForegroundColor White
-                Write-Host "* Abzulehnende Produkte: " -ForegroundColor White -NoNewline
-                Write-Host "$TotalDeclinedProducts" -ForegroundColor Red
-                Write-Host "* Erlaubte Produkte: " -ForegroundColor White -NoNewline
-                Write-Host "$TotalApprovedProducts" -ForegroundColor Green
-                Write-Host "* Gesamt definierte Produkte: " -ForegroundColor White -NoNewline
-                Write-Host "$($TotalDeclinedProducts + $TotalApprovedProducts)" -ForegroundColor Cyan
+                Write-Host "  PRODUKTE" -ForegroundColor White
+                Write-Host "  * Abzulehnende Produkte: $TotalDeclinedProducts" -ForegroundColor Gray
+                Write-Host "  * Erlaubte Produkte: $TotalApprovedProducts" -ForegroundColor Gray
+                Write-Host "  * Gesamt definierte Produkte: $($TotalDeclinedProducts + $TotalApprovedProducts)" -ForegroundColor Gray
                 
-                Write-Host "`nDrücken Sie Enter um fortzufahren..." -ForegroundColor Gray
+                Write-Host "  `nDrücken Sie Enter um fortzufahren..." -ForegroundColor Gray
                 Read-Host
             }
             
@@ -580,11 +571,9 @@ finally {
     $EndTime = Get-Date
     $Duration = $EndTime - $script:StartTime
     
-    Write-WSUSLog "========================================" -Status INFO
     Write-WSUSLog "Script beendet" -Status INFO
     Write-WSUSLog "Laufzeit: $($Duration.ToString('hh\:mm\:ss'))" -Status INFO
-    Write-WSUSLog "========================================" -Status INFO
-    
+
     if ($EnableFileLogging) {
         Write-WSUSLogFile "Script beendet - Laufzeit: $($Duration.ToString('hh\:mm\:ss'))"
     }
