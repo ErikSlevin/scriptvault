@@ -1,0 +1,10 @@
+[Unit]
+Description=Cults3D Monitor - stündlich
+
+[Timer]
+OnCalendar=*-*-* *:00:00
+RandomizedDelaySec=300
+Persistent=true
+
+[Install]
+WantedBy=timers.target

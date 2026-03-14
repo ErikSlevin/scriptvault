@@ -1,0 +1,11 @@
+[Unit]
+Description=Cults3D Design Performance Monitor -> InfluxDB
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/cults3d-monitor/cults3d-monitor.sh
+WorkingDirectory=/opt/cults3d-monitor
+StandardOutput=journal
+StandardError=journal
