@@ -2,9 +2,6 @@
 
 Trackt die Performance deiner [Cults3D](https://cults3d.com)-Designs (Views, Likes, Downloads, Umsatz, Verkaeufe) per GraphQL API und speichert die Metriken in InfluxDB 1.x. Inkl. fertigem Grafana Dashboard.
 
-![Dashboard](screenshots/dashboard-overview.png)
-![Details](screenshots/dashboard-details.png)
-
 ## Voraussetzungen
 
 - Linux mit `curl` und `jq`
