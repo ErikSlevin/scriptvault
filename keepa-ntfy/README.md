@@ -64,7 +64,7 @@ IMAP_USER=user@outlook.de     # Mailadresse
 IMAP_PASS=dein-passwort        # Passwort / App-Password
 
 # ntfy-Instanz
-NTFY_URL=https://ntfy.home.intern
+NTFY_URL=http://ntfy.home.intern
 NTFY_TOPIC=keepa               # Topic-Name
 NTFY_TOKEN=tk_DEIN_TOKEN        # Bearer Token
 
