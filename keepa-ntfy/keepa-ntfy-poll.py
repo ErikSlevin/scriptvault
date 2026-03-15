@@ -30,7 +30,7 @@ IMAP_PORT     = int(os.getenv("IMAP_PORT", "1993"))
 IMAP_USER     = os.getenv("IMAP_USER", "DEINE-MAIL-ADRESSE")
 IMAP_PASS     = os.getenv("IMAP_PASS", "")  # Aus Environment oder .env
 
-NTFY_URL      = os.getenv("NTFY_URL", "https://ntfy.home.intern")
+NTFY_URL      = os.getenv("NTFY_URL", "http://ntfy.home.intern")
 NTFY_TOPIC    = os.getenv("NTFY_TOPIC", "keepa")
 NTFY_TOKEN    = os.getenv("NTFY_TOKEN", "")  # Bearer Token
 
