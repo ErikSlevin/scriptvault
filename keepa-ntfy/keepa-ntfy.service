@@ -1,0 +1,18 @@
+[Unit]
+Description=Keepa IMAP to ntfy Notification Bridge
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/keepa-ntfy/keepa-ntfy-poll.py
+EnvironmentFile=/etc/keepa-ntfy/keepa-ntfy.env
+User=nobody
+Group=nogroup
+
+# Hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/keepa-ntfy
+PrivateTmp=yes
