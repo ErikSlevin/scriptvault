@@ -1,5 +1,7 @@
 # Keepa → ntfy Bridge
 
+<img src="keepa-ntfy-integration.png" alt="Keepa ntfy Integration" width="600">
+
 Pollt per IMAP eine Mailbox auf [Keepa](https://keepa.com) Preisalarm-Mails und leitet sie als aufbereitete Push-Notification an eine selbstgehostete [ntfy](https://ntfy.sh)-Instanz weiter.
 
 ## Was es macht
