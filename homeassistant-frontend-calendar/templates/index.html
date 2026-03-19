@@ -50,6 +50,11 @@
   .day-cell.other-month { opacity:0.35; }
   .day-num { font-size:12px; font-weight:600; color:var(--text-muted); width:22px; height:22px; display:flex; align-items:center; justify-content:center; border-radius:7px; margin:0 auto 2px; flex-shrink:0; transition:all var(--transition); }
   .day-cell.today .day-num { background:var(--accent); color:white; font-weight:800; }
+  .day-cell.today {
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    border: 2px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    border-radius: 10px;
+  }
   .day-cell.has-events .day-num { color:var(--text); }
   .day-cell.selected .day-num { background:var(--accent-soft); color:var(--accent); }
   .day-cell.today.selected .day-num { background:var(--accent); color:white; }
@@ -125,6 +130,15 @@
       border-radius:8px; margin-bottom:4px; transition:all var(--transition); flex-shrink:0;
     }
     .desktop-day.today .desktop-day-num { background:var(--accent); color:white; font-weight:800; }
+    .desktop-day.today {
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
+      border: 2px solid color-mix(in srgb, var(--accent) 40%, transparent);
+      border-radius: 12px;
+    }
+    .desktop-day.today.selected {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+    }
     .desktop-day.today.selected .desktop-day-num { background:var(--accent); color:white; }
     .desktop-day.has-events .desktop-day-num { color:var(--text); }
 
