@@ -52,7 +52,8 @@ Das Skript:
 Den angezeigten Public Key in Home Assistant eintragen:
 
 ```bash
-# Auf dem HA-Host unter der SSH-ADDON-Konfiguration
+# Auf dem HA-Host:
+echo "HIER_PUBLIC_KEY" >> /root/.ssh/authorized_keys
 ```
 
 ### 5. config.json anpassen

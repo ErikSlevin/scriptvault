@@ -1,0 +1,10 @@
+{
+  "ha_host": "homeassistant.home.intern",
+  "ha_ssh_port": 62222,
+  "ha_ssh_user": "root",
+  "ha_ssh_password": "",
+  "ha_ssh_key": "/opt/kalender/ha_key",
+  "ics_path": "/config/.storage/local_calendar.anne_arbeit.ics",
+  "ha_url": "http://homeassistant.home.intern:8123",
+  "ha_token": "DEIN_HA_LONG_LIVED_TOKEN"
+}
