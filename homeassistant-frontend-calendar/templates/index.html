@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Annes Kalender</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzdDNkZGNyIvPgogIDxyZWN0IHg9IjYiIHk9IjEwIiB3aWR0aD0iMjAiIGhlaWdodD0iMTYiIHJ4PSIzIiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC4xNSIvPgogIDxyZWN0IHg9IjYiIHk9IjEwIiB3aWR0aD0iMjAiIGhlaWdodD0iNiIgcng9IjMiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjkiLz4KICA8cmVjdCB4PSI2IiB5PSIxMyIgd2lkdGg9IjIwIiBoZWlnaHQ9IjMiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjkiLz4KICA8cmVjdCB4PSIxMCIgeT0iOCIgd2lkdGg9IjIuNSIgaGVpZ2h0PSI1IiByeD0iMS4yIiBmaWxsPSJ3aGl0ZSIvPgogIDxyZWN0IHg9IjE5LjUiIHk9IjgiIHdpZHRoPSIyLjUiIGhlaWdodD0iNSIgcng9IjEuMiIgZmlsbD0id2hpdGUiLz4KICA8cmVjdCB4PSI5IiB5PSIyMCIgd2lkdGg9IjQiIGhlaWdodD0iNCIgcng9IjEiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjkiLz4KICA8cmVjdCB4PSIxNCIgeT0iMjAiIHdpZHRoPSI0IiBoZWlnaHQ9IjQiIHJ4PSIxIiBmaWxsPSIjRkJCRjI0Ii8+CiAgPHJlY3QgeD0iMTkiIHk9IjIwIiB3aWR0aD0iNCIgaGVpZ2h0PSI0IiByeD0iMSIgZmlsbD0id2hpdGUiIG9wYWNpdHk9IjAuOSIvPgo8L3N2Zz4=">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzdDNkZGNyIvPgogIDxyZWN0IHg9IjYiIHk9IjEwIiB3aWR0aD0iMjAiIGhlaWdodD0iMTYiIHJ4PSIzIiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC4xNSIvPgogIDxyZWN0IHg9IjYiIHk9IjEwIiB3aWR0aD0iMjAiIGhlaWdodD0iNiIgcng9IjMiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjkiLz4KICA8cmVjdCB4PSI2IiB5PSIxMyIgd2lkdGg9IjIwIiBoZWlnaHQ9IjMiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjkiLz4KICA8cmVjdCB4PSIxMCIgeT0iOCIgd2lkdGg9IjIuNSIgaGVpZ2h0PSI1IiByeD0iMS4yIiBmaWxsPSJ3aGl0ZSIvPgogIDxyZWN0IHg9IjE5LjUiIHk9IjgiIHdpZHRoPSIyLjUiIGhlaWdodD0iNSIgcng9IjEuMiIgZmlsbD0id2hpdGUiLz4KICA8cmVjdCB4PSI5IiB5PSIyMCIgd2lkdGg9IjQiIGhlaWdodD0iNCIgcng9IjEiIGZpbGw9IndoaXRlIiBvcGFjaXR5PSIwLjkiLz4KICA8cmVjdCB4PSIxNCIgeT0iMjAiIHdpZHRoPSI0IiBoZWlnaHQ9IjQiIHJ4PSIxIiBmaWxsPSIjRkJCRjI0Ii8+CiAgPHJlY3QgeD0iMTkiIHk9IjIwIiB3aWR0aD0iNCIgaGVpZ2h0PSI0IiByeD0iMSIgZmlsbD0id2hpdGUiIG9wYWNpdHk9IjAuOSIvPgo8L3N2Zz4=">
 <style>
   :root {
     --accent: #7C6FF7; --accent-soft: #EEECfe;
@@ -429,6 +429,7 @@
           <div class="import-preview-list" id="sImportPreviewList"></div>
         </div>
         <div class="import-progress" id="sImportProgress" style="display:none"></div>
+        <button class="sidebar-back-btn" id="sCopyTemplateBtn" style="margin-bottom:12px;color:var(--accent)">📋 Template für aktuellen Monat kopieren</button>
         <div class="btn-row" style="margin-top:16px">
           <button class="btn btn-primary" id="sImportParseBtn" disabled style="opacity:0.4;cursor:not-allowed">Vorschau</button>
           <button class="btn btn-primary" id="sImportRunBtn" style="display:none">Importieren</button>
@@ -931,6 +932,41 @@ showSidebarView('placeholder');
 
 // ─── IMPORT ───
 document.getElementById('dImportBtn').addEventListener('click', ()=>showSidebarView('import'));
+// ─── TEMPLATE KOPIEREN ───
+document.getElementById('sCopyTemplateBtn').addEventListener('click', ()=>{
+  const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+  const lines = [];
+  for(let d=1; d<=daysInMonth; d++){
+    const ds = `${currentYear}-${String(currentMonth).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    lines.push(`("${ds}", ""),`);
+  }
+  const text = lines.join('\n');
+
+  // Clipboard API (HTTPS) mit Fallback für HTTP
+  if(navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(()=>{
+      showToast('📋 Template in Zwischenablage ✓');
+    }).catch(()=>fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+});
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try {
+    document.execCommand('copy');
+    showToast('📋 Template in Zwischenablage ✓');
+  } catch(e) {
+    showToast('❌ Kopieren fehlgeschlagen');
+  }
+  document.body.removeChild(ta);
+}
+
 document.getElementById('sImportTextarea').addEventListener('input', ()=>{
   const hasText = document.getElementById('sImportTextarea').value.trim().length > 0;
   const btn = document.getElementById('sImportParseBtn');
@@ -950,19 +986,64 @@ function parseImport() {
   const raw = document.getElementById('sImportTextarea').value;
   parsedImport = [];
   const errors = [];
-  // Matches: ("2026-05-01", "Früh") oder ("2026-05-01", 'Früh') mit oder ohne führendes Komma/Klammer
-  const regex = /[("']*(\d{4}-\d{2}-\d{2})['"\s]*,\s*['"](.*?)['"]/g;
-  let m;
-  while((m=regex.exec(raw))!==null) {
-    const dateStr = m[1];
-    const shift = m[2].trim();
-    if(!shift) continue;
-    // Datum validieren
-    const d = new Date(dateStr+'T12:00:00');
-    if(isNaN(d.getTime())) { errors.push(`Ungültiges Datum: ${dateStr}`); continue; }
-    parsedImport.push({date:dateStr, shift});
+
+  const MONTH_NAMES = {
+    'jan':1,'feb':2,'mär':3,'mar':3,'apr':4,'mai':5,'may':5,
+    'jun':6,'jul':7,'aug':8,'sep':9,'okt':10,'oct':10,'nov':11,'dez':12,'dec':12,
+    'januar':1,'februar':2,'märz':3,'april':4,'juni':6,'juli':7,
+    'august':8,'september':9,'oktober':10,'november':11,'dezember':12
+  };
+
+  function resolveYear(y) {
+    if(y.length===4) return parseInt(y);
+    const yr=parseInt(y); return yr<50?2000+yr:1900+yr;
   }
-  return {items:parsedImport, errors};
+
+  function tryParseDate(raw) {
+    raw=raw.trim();
+    if(/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+    const m=raw.match(/^(\d{1,2})[.\-\/]([a-zA-Z\u00e4\u00f6\u00fc\u00c4\u00d6\u00dc]+|\d{1,2})[.\-\/](\d{2,4})$/);
+    if(m){
+      const day=parseInt(m[1]);
+      let month;
+      if(/^\d+$/.test(m[2])) month=parseInt(m[2]);
+      else month=MONTH_NAMES[m[2].toLowerCase()];
+      if(!month) return null;
+      const year=resolveYear(m[3]);
+      return `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    }
+    return null;
+  }
+
+  const seen=new Set();
+
+  // JSON Array
+  try {
+    const json=JSON.parse(raw);
+    if(Array.isArray(json)){
+      json.forEach(e=>{
+        const d=tryParseDate(e.date||e.datum||'');
+        const s=(e.shift||e.schicht||e.summary||'').trim();
+        if(d&&s){const k=d+s;if(!seen.has(k)){seen.add(k);parsedImport.push({date:d,shift:s});}}
+        else errors.push(`Ungültig: ${JSON.stringify(e)}`);
+      });
+      return {items:parsedImport,errors};
+    }
+  } catch(e){}
+
+  // Zeilenweise
+  const lines=raw.split('\n');
+  for(const line of lines){
+    const l=line.trim(); if(!l) continue;
+    // Python-Tupel: ("2026-05-01", "Früh")
+    const t=l.match(/[("']*(\d{4}-\d{2}-\d{2}|\d{1,2}[.\-\/][^\s,."']+[.\-\/]\d{2,4})['"\s]*,\s*['"](.+?)['"]/);
+    if(t){const d=tryParseDate(t[1]),s=t[2].trim();if(d&&s){const k=d+s;if(!seen.has(k)){seen.add(k);parsedImport.push({date:d,shift:s});}continue;}}
+    // Freies Format: 01.03.26 - Früh
+    const f=l.match(/^[("']*(\d{1,2}[.\-\/][^\s,.\-\/"']+[.\-\/]\d{2,4})\s*[-\u2013:,]?\s*['"]?([A-Za-z\u00e4\u00f6\u00fc\u00c4\u00d6\u00dc]+)['"]?/);
+    if(f){const d=tryParseDate(f[1]),s=f[2].trim();if(d&&s){const k=d+s;if(!seen.has(k)){seen.add(k);parsedImport.push({date:d,shift:s});}continue;}}
+    if(l.length>3) errors.push(`Nicht erkannt: ${l.slice(0,40)}`);
+  }
+  return {items:parsedImport,errors};
 }
 
 document.getElementById('sImportParseBtn').addEventListener('click', ()=>{
